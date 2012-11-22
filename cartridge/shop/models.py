@@ -162,6 +162,31 @@ class Product(Displayable, Priced, RichText, AdminThumbMixin):
             self.image = default.image.file.name
         self.save()
 
+class ReservableProduct(Product):
+    """
+    Subclassed product for reservable types.
+    """
+    
+    # not available dates
+    # price definitions
+    # - per day?
+    # - special seasons?
+    # - maybe simple unit price per day to start
+    # how many units available
+    
+    units_available = models.IntegerField(_("Units available"))
+    
+    class Meta:
+        verbose_name = _("Reservable Product")
+        verbose_name_plural = _("Reservable Products")
+    
+    def is_available(self, period):
+        """
+        Check reservations to see if any units available.
+        Period should be a class containing a range of dates.
+        """
+        return True # for now :)
+        
 
 class ProductImage(Orderable):
     """
