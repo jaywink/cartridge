@@ -198,6 +198,17 @@ class ReservableProduct(Product):
         """
         return True # for now :)
         
+class Reservation(models.Model):
+    """
+    Model representing a reservation for a reservable product in a cart or order.
+    """
+    
+    from_day = models.DateTimeField(_("From date"))
+    to_day = models.DateTimeField(_("To date"))
+    
+    order = models.ForeignKey("Order", null=True)
+    cart = models.ForeignKey("Cart", null=True)
+
 
 class ProductImage(Orderable):
     """
