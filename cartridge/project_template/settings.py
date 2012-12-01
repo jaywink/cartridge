@@ -58,7 +58,6 @@
 # SHOP_OPTION_TYPE_CHOICES = (
 #     (1, "Size"),
 #     (2, "Colour"),
-#     (3, "Day of Week"),
 # )
 
 ######################
