@@ -22,6 +22,10 @@
 		<th colspan="2" class="left">{% trans "Item" %}</th>
 		<th>{% trans "Unit Price" %}</th>
 		<th class="center">{% trans "Qty" %}</th>
+        {% if request.cart.has_reservables %}
+            <th class="center">From date</th>
+            <th class="center">To date</th>    
+        {% endif %}
 		<th>{% trans "Price" %}</th>
 		<th class="center">{% trans "Remove?" %}</th>
 	</tr>
@@ -41,6 +45,10 @@
         </td>
 		<td>{{ item.unit_price|currency }}</td>
 		<td class="quantity">{{ form.quantity }}</td>
+        {% if request.cart.has_reservables %}
+            <td class="center">{{ item.from_date }}</td>
+            <td class="center">{{ item.to_date }}</td>
+        {% endif %}
 		<td>{{ item.total_price|currency }}</td>
 		<td class="center">{{ form.DELETE }}</td>
 	</tr>
