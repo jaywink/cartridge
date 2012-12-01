@@ -178,15 +178,6 @@ class ReservableProduct(Product):
     Subclassed product for reservable types.
     """
     
-    # not available dates
-    # price definitions
-    # - per day?
-    # - special seasons?
-    # - maybe simple unit price per day to start
-    # how many units available
-    
-    units_available = models.IntegerField(_("Units available"))
-    
     class Meta:
         verbose_name = _("Reservable Product")
         verbose_name_plural = _("Reservable Products")
@@ -198,17 +189,6 @@ class ReservableProduct(Product):
         """
         return True # for now :)
         
-class Reservation(models.Model):
-    """
-    Model representing a reservation for a reservable product in a cart or order.
-    """
-    
-    from_day = models.DateTimeField(_("From date"))
-    to_day = models.DateTimeField(_("To date"))
-    
-    order = models.ForeignKey("Order", null=True)
-    cart = models.ForeignKey("Cart", null=True)
-
 
 class ProductImage(Orderable):
     """
@@ -609,7 +589,7 @@ class Cart(models.Model):
             self._cached_items = self.items.all()
         return iter(self._cached_items)
 
-    def add_item(self, variation, quantity):
+    def add_item(self, variation, quantity, from_date=None, to_date=None):
         """
         Increase quantity of existing item if SKU matches, otherwise create
         new.
@@ -625,6 +605,8 @@ class Cart(models.Model):
                 item.image = unicode(image.file)
             variation.product.actions.added_to_cart()
         item.quantity += quantity
+        item.from_date = from_date
+        item.to_date = to_date
         item.save()
 
     def has_items(self):
@@ -681,6 +663,12 @@ class Cart(models.Model):
             if item.sku in discount_skus:
                 total += discount.calculate(item.unit_price) * item.quantity
         return total
+    
+    def has_reservables(self):
+        for item in self:
+            if item.from_date and item.to_date:
+                return True
+        return False
 
 
 class SelectedProduct(models.Model):
@@ -693,12 +681,22 @@ class SelectedProduct(models.Model):
     quantity = models.IntegerField(_("Quantity"), default=0)
     unit_price = fields.MoneyField(_("Unit price"), default=Decimal("0"))
     total_price = fields.MoneyField(_("Total price"), default=Decimal("0"))
+    
+    # for reservable products
+    from_date = models.DateTimeField(_("From date"), null=True)
+    to_date = models.DateTimeField(_("To date"), null=True)
 
     class Meta:
         abstract = True
 
     def __unicode__(self):
         return ""
+        
+    def is_reserved(self):
+        if from_day and to_day:
+            return True
+        else:
+            return False
 
     def save(self, *args, **kwargs):
         """

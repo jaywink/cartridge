@@ -55,7 +55,13 @@ def product(request, slug, template="shop/product.html"):
         if add_product_form.is_valid():
             if to_cart:
                 quantity = add_product_form.cleaned_data["quantity"]
-                request.cart.add_item(add_product_form.variation, quantity)
+                if product.content_model == 'reservableproduct':
+                    from_date = add_product_form.cleaned_data["from_date"]
+                    to_date = add_product_form.cleaned_data["to_date"]
+                else:
+                    from_date = None
+                    to_date = None
+                request.cart.add_item(add_product_form.variation, quantity, from_date, to_date)
                 recalculate_discount(request)
                 info(request, _("Item added to cart"))
                 return redirect("shop_cart")

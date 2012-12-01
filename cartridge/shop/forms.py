@@ -1,6 +1,7 @@
 
 from copy import copy
 from datetime import date
+import datetime
 from itertools import dropwhile, takewhile
 from locale import localeconv
 from re import match
@@ -80,6 +81,14 @@ class AddProductForm(forms.Form):
                     field = forms.ChoiceField(label=option_labels[i],
                                               choices=make_choices(values))
                     self.fields[name] = field
+        if self._product.content_model == 'reservableproduct':
+            # ReservableProduct needs from/to dates and does not need quantity
+            #TODO: use normal datetime select with jquery date selector and filter out reserved dates
+            #      validation must also check for reserved dates
+            
+            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("From date"), initial=datetime.date.today)
+            self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("To date"))
+            self.fields["quantity"] = forms.IntegerField(min_value=1, initial=1, widget=forms.HiddenInput())
 
     def clean(self):
         """
@@ -92,6 +101,8 @@ class AddProductForm(forms.Form):
         # a variation.
         data = self.cleaned_data.copy()
         quantity = data.pop("quantity")
+        from_date = data.pop("from_date")
+        to_date = data.pop("to_date")
         # Ensure the product has a price if adding to cart.
         if self._to_cart:
             data["unit_price__isnull"] = False
