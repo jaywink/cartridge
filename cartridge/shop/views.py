@@ -18,7 +18,7 @@ from mezzanine.utils.views import render, set_cookie, paginate
 
 from cartridge.shop import checkout
 from cartridge.shop.forms import AddProductForm, DiscountForm, CartItemFormSet
-from cartridge.shop.models import Product, ProductVariation, Order, OrderItem
+from cartridge.shop.models import Product, ReservableProduct, ProductVariation, Order, OrderItem
 from cartridge.shop.models import DiscountCode
 from cartridge.shop.utils import recalculate_discount, sign
 
@@ -74,6 +74,14 @@ def product(request, slug, template="shop/product.html"):
                 response = redirect("shop_wishlist")
                 set_cookie(response, "wishlist", ",".join(skus))
                 return response
+    if product.content_model == 'reservableproduct':
+        # update reservations
+        reservable = ReservableProduct.objects.get(id=product.id)
+        #reservable.reservations.all().delete()
+        #reservable.update_from_hook()
+        reservations = reservable.reservations.all()
+    else:
+        reservations = None
     context = {
         "product": product,
         "editable_obj": product,
@@ -83,7 +91,8 @@ def product(request, slug, template="shop/product.html"):
         "has_available_variations": any([v.has_price() for v in variations]),
         "related_products": product.related_products.published(
                                                       for_user=request.user),
-        "add_product_form": add_product_form
+        "add_product_form": add_product_form,
+        "reservations": reservations
     }
     templates = [u"shop/%s.html" % unicode(product.slug), template]
     # Check for a template matching the page's content model.
