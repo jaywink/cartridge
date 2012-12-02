@@ -92,7 +92,8 @@ def product(request, slug, template="shop/product.html"):
         "related_products": product.related_products.published(
                                                       for_user=request.user),
         "add_product_form": add_product_form,
-        "reservations": reservations
+        "reservations": reservations,
+        "reservable": reservable
     }
 
     templates = []

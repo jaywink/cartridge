@@ -2,6 +2,7 @@
 from decimal import Decimal
 from operator import iand, ior
 from datetime import datetime
+import json
 
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -190,6 +191,17 @@ class ReservableProduct(Product):
                 for day in days:
                     reservation = ReservableProductReservation(date=datetime(year, month, day), product=self)
                     reservation.save()
+                    
+    def reservations_to_json(self):
+        output = {}
+        for reservation in self.reservations.all():
+            if not reservation.date.year in output.keys():
+                output[reservation.date.year] = {}
+            if not reservation.date.month in output[reservation.date.year].keys():
+                output[reservation.date.year][reservation.date.month] = []
+            output[reservation.date.year][reservation.date.month].append(reservation.date.day);
+        print "reservations_to_js",output
+        return json.dumps(output)
     
     def is_available(self, period):
         """
