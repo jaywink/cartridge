@@ -11,7 +11,6 @@ from django.db.models import CharField, F, Q
 from django.db.models.base import ModelBase
 from django.dispatch import receiver
 from django.utils.translation import ugettext, ugettext_lazy as _
-from django.utils import timezone
 
 from mezzanine.conf import settings
 from mezzanine.core.fields import FileField
@@ -20,7 +19,7 @@ from mezzanine.core.models import Displayable, RichText, Orderable
 from mezzanine.generic.fields import RatingField
 from mezzanine.pages.models import Page
 from mezzanine.utils.models import AdminThumbMixin
-from mezzanine.utils.timezone import now, make_aware
+from mezzanine.utils.timezone import now
 
 from cartridge.shop import fields, managers
 
