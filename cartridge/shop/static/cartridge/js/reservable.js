@@ -12,17 +12,39 @@ function isReserved(date) {
     }
 }
 
-$(document).ready(function(){    
+var datepickerTarget = '#id_from_date';
 
+function switchDatepickerTarget() {
+    if (datepickerTarget == '#id_from_date')
+        datepickerTarget = '#id_to_date';
+    else
+        datepickerTarget = '#id_from_date';
+}
+
+function controlAddToCartButton() {
+    if ($('input#id_from_date').val().length > 0 && $('input#id_to_date').val().length > 0) {
+        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
+    } else {
+        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+    }
+}
+
+$(document).ready(function(){    
+    
+    $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+    
     $("#datepicker-reservations").datepicker({
         beforeShowDay: isReserved,
         onSelect: function(selectedDate) {
-            $("#id_from_date").val(selectedDate);
+            $(datepickerTarget).val(selectedDate);
+            switchDatepickerTarget();
+            controlAddToCartButton();
+            //TODO validate date range and disable buy button if not ok
         },
         firstDay: 1,
         minDate: 0,
         maxDate: 120,
-        
+        dateFormat: "dd.mm.yy"
     });
     $("#datepicker-reservations").datepicker("show");
 });

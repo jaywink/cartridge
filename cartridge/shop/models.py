@@ -1,7 +1,7 @@
 
 from decimal import Decimal
 from operator import iand, ior
-from datetime import datetime
+import datetime
 import json
 
 from django.core.urlresolvers import reverse
@@ -11,6 +11,7 @@ from django.db.models import CharField, F, Q
 from django.db.models.base import ModelBase
 from django.dispatch import receiver
 from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils import timezone
 
 from mezzanine.conf import settings
 from mezzanine.core.fields import FileField
@@ -19,7 +20,7 @@ from mezzanine.core.models import Displayable, RichText, Orderable
 from mezzanine.generic.fields import RatingField
 from mezzanine.pages.models import Page
 from mezzanine.utils.models import AdminThumbMixin
-from mezzanine.utils.timezone import now
+from mezzanine.utils.timezone import now, make_aware
 
 from cartridge.shop import fields, managers
 
@@ -181,7 +182,7 @@ class ReservableProduct(Product):
         """
         hook = __import__(self.hook_module)
         manage = hook.reservation.Manage()
-        today = datetime.today()
+        today = datetime.date.today()
         month = today.month
         year = today.year
         days = manage.list_reserved_dates(month, year)
@@ -189,7 +190,7 @@ class ReservableProduct(Product):
         for year, months in days.items():
             for month, days in months.items():
                 for day in days:
-                    reservation = ReservableProductReservation(date=datetime(year, month, day), product=self)
+                    reservation = ReservableProductReservation(date=datetime.date(year, month, day), product=self)
                     reservation.save()
                     
     def reservations_to_json(self):
@@ -216,7 +217,7 @@ class ReservableProductReservation(models.Model):
     Reservation
     """
     
-    date = models.DateTimeField(_("Date"))
+    date = models.DateField(_("Date"))
     product = models.ForeignKey("ReservableProduct", related_name="reservations")
     
     def __unicode__(self):
