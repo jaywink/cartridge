@@ -1,8 +1,8 @@
 
-function isReserved(date) {
+function isAvailable(date) {
     if (typeof reservedDays[date.getFullYear()] !== 'undefined' &&
             typeof reservedDays[date.getFullYear()][date.getMonth()+1] !== 'undefined' ){
-        if (reservedDays[date.getFullYear()][date.getMonth()+1].indexOf(date.getDate()) != -1) {
+        if (reservedDays[date.getFullYear()][date.getMonth()+1].indexOf(date.getDate()) > -1) {
             return [false, "reserved"];
         } else {
             return [true];
@@ -21,12 +21,40 @@ function switchDatepickerTarget() {
         datepickerTarget = '#id_from_date';
 }
 
-function controlAddToCartButton() {
+function validateAddToCartButton(dates) {
     if ($('input#id_from_date').val().length > 0 && $('input#id_to_date').val().length > 0) {
         $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
     } else {
         $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+        return;
     }
+    // to date cannot be earlier or same as from date
+    if (dates[1] <= dates[0]) {
+        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+        return;
+    } else {
+        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
+    }
+    // make sure no reservations between dates
+    curDay = dates[0];
+    while (true) {
+        curDay.setDate(curDay.getDate() + 1);
+        if (! isAvailable(curDay)[0]) {
+            $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+            return;
+        }
+        if (curDay >= dates[1]) {
+            break;
+        }
+    }
+    $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
+}
+
+function parseReservationDates() {
+    var dateArr = [$('input#id_from_date').val().split('.'), $('input#id_to_date').val().split('.')];
+    var fromDate = new Date(parseInt(dateArr[0][2]), parseInt(dateArr[0][1])-1, parseInt(dateArr[0][0]));
+    var toDate = new Date(parseInt(dateArr[1][2]), parseInt(dateArr[1][1])-1, parseInt(dateArr[1][0]));
+    return [fromDate, toDate];
 }
 
 $(document).ready(function(){    
@@ -34,12 +62,12 @@ $(document).ready(function(){
     $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
     
     $("#datepicker-reservations").datepicker({
-        beforeShowDay: isReserved,
+        beforeShowDay: isAvailable,
         onSelect: function(selectedDate) {
             $(datepickerTarget).val(selectedDate);
             switchDatepickerTarget();
-            controlAddToCartButton();
-            //TODO validate date range and disable buy button if not ok
+            var dates = parseReservationDates();
+            validateAddToCartButton(dates);
         },
         firstDay: 1,
         minDate: 0,
