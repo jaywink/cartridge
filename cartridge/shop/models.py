@@ -221,7 +221,27 @@ class ReservableProductReservation(models.Model):
     
     def __unicode__(self):
         return str(self.date)
+        
+
+class ReservableProductCartReservation(models.Model):
+    """
+    Reservation in cart
+    """
     
+    cart = models.ForeignKey("Cart", related_name="reservations")
+    reservation = models.ForeignKey("ReservableProductReservation", related_name="in_carts")
+    last_updated = models.DateTimeField(_("Last updated"), null=True)
+    
+
+class ReservableProductOrderReservation(models.Model):
+    """
+    Reservation in order
+    """
+    
+    order = models.ForeignKey("Order", related_name="reservations")
+    reservation = models.ForeignKey("ReservableProductReservation", related_name="in_orders")
+    last_updated = models.DateTimeField(_("Last updated"), null=True)
+
 
 class ProductImage(Orderable):
     """

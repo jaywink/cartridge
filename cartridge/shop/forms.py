@@ -83,7 +83,7 @@ class AddProductForm(forms.Form):
             #TODO: use normal datetime select with jquery date selector and filter out reserved dates
             #      validation must also check for reserved dates
             
-            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("From date"), initial=datetime.date.today)
+            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("From date"))
             self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("To date"))
             self.fields["quantity"] = forms.IntegerField(min_value=1, initial=1, widget=forms.HiddenInput())
 
