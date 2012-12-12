@@ -18,7 +18,7 @@ from mezzanine.core.templatetags.mezzanine_tags import thumbnail
 from mezzanine.utils.timezone import now
 
 from cartridge.shop import checkout
-from cartridge.shop.models import Product, ProductOption, ProductVariation
+from cartridge.shop.models import Product, ReservableProduct, ProductOption, ProductVariation
 from cartridge.shop.models import Cart, CartItem, Order, DiscountCode
 from cartridge.shop.utils import make_choices, set_locale, set_shipping
 
@@ -27,6 +27,8 @@ ADD_PRODUCT_ERRORS = {
     "invalid_options": _("The selected options are currently unavailable."),
     "no_stock": _("The selected options are currently not in stock."),
     "no_stock_quantity": _("The selected quantity is currently unavailable."),
+    "period_not_available": _("The whole period is not available."),
+    "cannot_edit_reservable_quantity": _("Cannot edit quantity of reservable product."),
 }
 
 
@@ -80,9 +82,6 @@ class AddProductForm(forms.Form):
                     self.fields[name] = field
         if self._product.content_model == 'reservableproduct':
             # ReservableProduct needs from/to dates and does not need quantity
-            #TODO: use normal datetime select with jquery date selector and filter out reserved dates
-            #      validation must also check for reserved dates
-            
             self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("From date"))
             self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("To date"))
             self.fields["quantity"] = forms.IntegerField(min_value=1, initial=1, widget=forms.HiddenInput())
@@ -116,12 +115,21 @@ class AddProductForm(forms.Form):
         except ProductVariation.DoesNotExist:
             error = "invalid_options"
         else:
-            # Validate stock if adding to cart.
             if self._to_cart:
-                if not variation.has_stock():
-                    error = "no_stock"
-                elif not variation.has_stock(quantity):
-                    error = "no_stock_quantity"
+                if self._product.content_model == 'reservableproduct':
+                    # check if available to reserve
+                    reservableproduct = ReservableProduct.objects.get(pk=self._product.id)
+                    if not reservableproduct.is_available(from_date, to_date):
+                        error = "period_not_available"
+                    else:
+                        # fix quantity
+                        self.cleaned_data["quantity"] = (to_date - from_date).days
+                else:
+                    # Validate stock if adding to cart.
+                    if not variation.has_stock():
+                        error = "no_stock"
+                    elif not variation.has_stock(quantity):
+                        error = "no_stock_quantity"
         if error is not None:
             raise forms.ValidationError(ADD_PRODUCT_ERRORS[error])
         self.variation = variation
@@ -143,6 +151,10 @@ class CartItemForm(forms.ModelForm):
         Validate that the given quantity is available.
         """
         variation = ProductVariation.objects.get(sku=self.instance.sku)
+        if variation.product.content_model == 'reservableproduct':
+            # not allowed to edit quantity of reservable
+            error = ADD_PRODUCT_ERRORS["cannot_edit_reservable_quantity"]
+            raise forms.ValidationError(error)
         quantity = self.cleaned_data["quantity"]
         if not variation.has_stock(quantity - self.instance.quantity):
             error = ADD_PRODUCT_ERRORS["no_stock_quantity"]
