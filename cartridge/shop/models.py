@@ -22,6 +22,7 @@ from mezzanine.pages.models import Page
 from mezzanine.utils.models import AdminThumbMixin, upload_to
 
 from cartridge.shop import fields, managers
+import cartridge.shop.utils as utils
 
 try:
     from _mysql_exceptions import OperationalError
@@ -214,12 +215,15 @@ class ReservableProduct(Product):
         print "reservations_to_js",output
         return json.dumps(output)
     
-    def is_available(self, period):
+    def is_available(self, from_date, to_date):
         """
-        Check reservations to see if any units available.
-        Period should be a class containing a range of dates.
+        Check reservations to see if available
         """
-        return True # for now :)
+        reservations = self.reservations.filter(date__range=(from_date, to_date))
+        if len(reservations) > 0:
+            return False
+        else:
+            return True
         
         
 class ReservableProductReservation(models.Model):
@@ -241,7 +245,7 @@ class ReservableProductCartReservation(models.Model):
     
     cart = models.ForeignKey("Cart", related_name="reservations")
     reservation = models.ForeignKey("ReservableProductReservation", related_name="in_carts")
-    last_updated = models.DateTimeField(_("Last updated"), null=True)
+    last_updated = models.DateTimeField(_("Last updated"), auto_now=True)
     
 
 class ReservableProductOrderReservation(models.Model):
@@ -251,7 +255,7 @@ class ReservableProductOrderReservation(models.Model):
     
     order = models.ForeignKey("Order", related_name="reservations")
     reservation = models.ForeignKey("ReservableProductReservation", related_name="in_orders")
-    last_updated = models.DateTimeField(_("Last updated"), null=True)
+    last_updated = models.DateTimeField(_("Last updated"), auto_now=True)
 
 
 class ProductImage(Orderable):
@@ -659,7 +663,13 @@ class Cart(models.Model):
         new.
         """
         kwargs = {"sku": variation.sku, "unit_price": variation.price()}
-        item, created = self.items.get_or_create(**kwargs)
+        if variation.product.content_model == 'reservableproduct':
+            # create always
+            kwargs["cart"] = self
+            item = CartItem(**kwargs)
+            created = True
+        else:
+            item, created = self.items.get_or_create(**kwargs)
         if created:
             item.description = unicode(variation)
             item.unit_price = variation.price()
@@ -672,6 +682,13 @@ class Cart(models.Model):
         item.from_date = from_date
         item.to_date = to_date
         item.save()
+        if variation.product.content_model == 'reservableproduct':
+            # we also create a reservable cart reservation
+            for date in utils.daterange(from_date, to_date - datetime.timedelta(days=1)):
+                reservation = ReservableProductReservation({date: date, product: variation.product})
+                reservation.save()
+                reservation_cart = ReservableProductCartReservation({cart: self, reservation: reservation})
+                reservation_cart.save()
 
     def has_items(self):
         """
@@ -783,6 +800,20 @@ class CartItem(SelectedProduct):
 
     def get_absolute_url(self):
         return self.url
+        
+    def delete(self, *args, **kwargs):
+        """
+        Overriden default delete method to cover reservables
+        """
+        ##TODO: WIP .. need to redesign models a bit maybe
+        product = ProductVariation.objects.get(sku=self.sku)
+        if product.content_model == 'reservableproduct':
+            cart_reservations = ReservableProductCartReservation.objects.filter(cart=self.cart)
+            for cart_reservation in cart_reservations:
+                cart_reservation.reservation.delete()
+                cart_reservation.delete()
+        super(Blog, self).save(*args, **kwargs) # Call the "real" save() method.
+        do_something_else()
 
 
 class OrderItem(SelectedProduct):
