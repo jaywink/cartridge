@@ -684,10 +684,12 @@ class Cart(models.Model):
         item.save()
         if variation.product.content_model == 'reservableproduct':
             # we also create a reservable cart reservation
-            for date in utils.daterange(from_date, to_date - datetime.timedelta(days=1)):
-                reservation = ReservableProductReservation({date: date, product: variation.product})
+            for date in utils.daterange(from_date, to_date):
+                print date
+                reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
+                reservation = ReservableProductReservation(date=date, product=reservableproduct)
                 reservation.save()
-                reservation_cart = ReservableProductCartReservation({cart: self, reservation: reservation})
+                reservation_cart = ReservableProductCartReservation(cart=self, reservation=reservation)
                 reservation_cart.save()
 
     def has_items(self):
@@ -805,15 +807,13 @@ class CartItem(SelectedProduct):
         """
         Overriden default delete method to cover reservables
         """
-        ##TODO: WIP .. need to redesign models a bit maybe
-        product = ProductVariation.objects.get(sku=self.sku)
-        if product.content_model == 'reservableproduct':
+        variation = ProductVariation.objects.get(sku=self.sku)
+        if variation.product.content_model == 'reservableproduct':
             cart_reservations = ReservableProductCartReservation.objects.filter(cart=self.cart)
             for cart_reservation in cart_reservations:
                 cart_reservation.reservation.delete()
                 cart_reservation.delete()
-        super(Blog, self).save(*args, **kwargs) # Call the "real" save() method.
-        do_something_else()
+        super(CartItem, self).delete(*args, **kwargs)
 
 
 class OrderItem(SelectedProduct):
