@@ -685,7 +685,6 @@ class Cart(models.Model):
         if variation.product.content_model == 'reservableproduct':
             # we also create a reservable cart reservation
             for date in utils.daterange(from_date, to_date):
-                print date
                 reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
                 reservation = ReservableProductReservation(date=date, product=reservableproduct)
                 reservation.save()
