@@ -585,6 +585,14 @@ class Order(models.Model):
             except ProductVariation.DoesNotExist:
                 pass
             else:
+                if variation.product.content_model == 'reservableproduct':
+                    # we also create a reservable order reservation
+                    for date in utils.daterange(item.from_date, item.to_date):
+                        reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
+                        reservation = ReservableProductReservation.objects.get(date=date, product=reservableproduct)
+                        if reservation:
+                            reservation_order = ReservableProductOrderReservation(order=self, reservation=reservation)
+                            reservation_order.save()
                 variation.update_stock(item.quantity * -1)
                 variation.product.actions.purchased()
         code = request.session.get('discount_code')
@@ -617,6 +625,12 @@ class Order(models.Model):
         return "<a href='%s?format=pdf'>%s</a>" % (url, text)
     invoice.allow_tags = True
     invoice.short_description = ""
+    
+    def has_reservables(self):
+        for item in self.items:
+            if item.from_date and item.to_date:
+                return True
+        return False
 
 
 class Cart(models.Model):
@@ -787,7 +801,10 @@ class CartItem(SelectedProduct):
         if variation.product.content_model == 'reservableproduct':
             cart_reservations = ReservableProductCartReservation.objects.filter(cart=self.cart)
             for cart_reservation in cart_reservations:
-                cart_reservation.reservation.delete()
+                # delete reservation if not moved to an order
+                order_reservation = ReservableProductOrderReservation.objects.get(reservation=cart_reservation.reservation)
+                if not order_reservation:
+                    cart_reservation.reservation.delete()
                 cart_reservation.delete()
         super(CartItem, self).delete(*args, **kwargs)
 
