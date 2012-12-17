@@ -354,6 +354,10 @@ def invoice(request, order_id, template="shop/order_invoice.html"):
         lookup["user_id"] = request.user.id
     order = get_object_or_404(Order, **lookup)
     context = {"order": order}
+    if order.has_reservables:
+        context["has_reservables"] = True
+    else:
+        context["has_reservables"] = False
     context.update(order.details_as_dict())
     context = RequestContext(request, context)
     if request.GET.get("format") == "pdf":
