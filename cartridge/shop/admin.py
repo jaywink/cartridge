@@ -281,7 +281,10 @@ class ProductAdmin(DisplayableAdmin):
         """
         if self.model is Product:
             product = get_object_or_404(Product, pk=object_id)
-            content_model = product.get_content_model()
+            try:
+                content_model = product.get_content_model()
+            except:
+                content_model = None
             if content_model is not None:
                 change_url = admin_url(content_model.__class__, "change",
                                        content_model.id)
