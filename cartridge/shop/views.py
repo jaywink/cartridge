@@ -82,6 +82,7 @@ def product(request, slug, template="shop/product.html"):
         reservations = reservable.reservations.all()
     else:
         reservations = None
+        reservable = None
     context = {
         "product": product,
         "editable_obj": product,
