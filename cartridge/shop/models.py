@@ -777,8 +777,8 @@ class SelectedProduct(models.Model):
     total_price = fields.MoneyField(_("Total price"), default=Decimal("0"))
     
     # for reservable products
-    from_date = models.DateTimeField(_("From date"), null=True)
-    to_date = models.DateTimeField(_("To date"), null=True)
+    from_date = models.DateField(_("From date"), null=True)
+    to_date = models.DateField(_("To date"), null=True)
 
     class Meta:
         abstract = True
