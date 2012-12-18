@@ -90,6 +90,25 @@ class Priced(models.Model):
         obj_to.save()
 
 
+class SpecialPrice(models.Model):
+    """
+    Special prices for products. Either periods or type based.
+    """
+    
+    SPECIAL_TYPES = (
+        ('PER', 'Period of days'),
+        ('WKD', 'Weekend (Friday-Saturday)'),
+    )
+    
+    price_change = fields.MoneyField(_("Price change"))
+    special_type = models.CharField(max_length=3, choices=SPECIAL_TYPES)
+    product = models.ForeignKey("Product", related_name="specialprices")
+    
+    class Meta:
+        verbose_name = _("Special Price")
+        verbose_name_plural = _("Special Prices")
+
+
 class BaseProduct(Displayable):
     """
     Exists solely to store ``DisplayableManager`` as the main manager.
