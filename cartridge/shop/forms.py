@@ -19,7 +19,7 @@ from mezzanine.core.templatetags.mezzanine_tags import thumbnail
 
 from cartridge.shop import checkout
 from cartridge.shop.models import Product, ReservableProduct, ProductOption, ProductVariation
-from cartridge.shop.models import Cart, CartItem, Order, DiscountCode
+from cartridge.shop.models import Cart, CartItem, Order, DiscountCode, SpecialPrice
 from cartridge.shop.utils import make_choices, set_locale, set_shipping
 
 
@@ -540,3 +540,12 @@ class DiscountAdminForm(forms.ModelForm):
             error = _("Please enter a value for only one type of reduction.")
             self._errors[fields[0]] = self.error_class([error])
         return self.cleaned_data
+
+
+class SpecialPriceAdminForm(forms.ModelForm):
+    """
+    Special price checks for admin form.
+    """
+    def clean(self):
+        return self.cleaned_data
+        
