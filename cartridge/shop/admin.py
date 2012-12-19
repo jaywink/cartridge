@@ -43,9 +43,11 @@ from cartridge.shop.fields import MoneyField
 from cartridge.shop.forms import ProductAdminForm, ProductVariationAdminForm
 from cartridge.shop.forms import ProductVariationAdminFormset
 from cartridge.shop.forms import DiscountAdminForm, ImageWidget, MoneyWidget
+from cartridge.shop.forms import SpecialPriceAdminForm
 from cartridge.shop.models import Category, Product, ProductImage, ReservableProduct
 from cartridge.shop.models import ProductVariation, ProductOption, Order
 from cartridge.shop.models import OrderItem, Sale, DiscountCode
+from cartridge.shop.models import SpecialPrice
 
 
 # Lists of field names.
@@ -372,6 +374,13 @@ class DiscountCodeAdmin(admin.ModelAdmin):
     )
 
 
+class SpecialPriceAdmin(admin.ModelAdmin):
+    list_display = ("id", "price_change", "special_type", "product")
+    list_editable = ("price_change", "special_type", "product")
+    formfield_overrides = {MoneyField: {"widget": MoneyWidget}}
+    form = SpecialPriceAdminForm
+    
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ReservableProduct, ProductAdmin)
@@ -380,3 +389,4 @@ if settings.SHOP_USE_VARIATIONS:
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Sale, SaleAdmin)
 admin.site.register(DiscountCode, DiscountCodeAdmin)
+admin.site.register(SpecialPrice, SpecialPriceAdmin)
