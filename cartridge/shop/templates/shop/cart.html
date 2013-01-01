@@ -60,6 +60,22 @@
 	</tr>
 	{% endwith %}
 	{% endfor %}
+    {% if request.cart.special_prices %}
+        <tr>
+            <th colspan="4" class="left">Specials</th>
+            <th colspan="3" class="left">Product</th>
+            <th class="center">Price adj</th>
+        </tr>
+        {% for special in request.cart.special_prices %}
+            <tr>
+                {% if special.1 == 'WKD' %}
+                    <td colspan="4" class="left">Weekend</td>
+                {% endif %}
+                <td colspan="3" class="left">{{ special.0 }}</td>
+                <td class="center">{{ special.2|currency }}</td>
+            </tr>
+        {% endfor %}
+    {% endif %}
 	<tr>
 		<td colspan="5">{% order_totals %}</td>
 		<td>&nbsp;</td>
