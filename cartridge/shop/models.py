@@ -720,7 +720,10 @@ class Cart(models.Model):
         """
         Template helper function - sum of all costs of item quantities.
         """
-        return sum([item.total_price for item in self])
+        total = sum([item.total_price for item in self])
+        for special in self.special_prices():
+            total += special[2]
+        return total
 
     def skus(self):
         """
@@ -758,6 +761,39 @@ class Cart(models.Model):
             if item.sku in discount_skus:
                 total += discount.calculate(item.unit_price) * item.quantity
         return total
+        
+    def special_prices(self):
+        """
+        Get all the special prices that affect this cart.
+        """
+        result = []
+        items_done = []
+        for item in self:
+            variation = ProductVariation.objects.get(sku=item.sku)
+            specials = SpecialPrice.objects.filter(product=variation.product)
+            if variation.product.content_model == 'reservableproduct' and item in items_done:
+                # only do each item once for reservables
+                continue
+            for special in specials:
+                # for reservables we check against days in reserved period
+                # for other products we check against purchasing date
+                if variation.product.content_model == 'reservableproduct':
+                    reserved_days = ReservableProductCartReservation.objects.filter(cart=self)
+                    for reservation in reserved_days:
+                        print reservation.reservation.product,variation.product
+                        #print reservation.reservation.date
+                        reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
+                        if reservableproduct == reservation.reservation.product:
+                            print reservation.reservation.date
+                            if special.special_type == 'WKD' and reservation.reservation.date.isoweekday() in [5,6]:
+                                # reservation occurs on a weekend date
+                                result.append((variation.product.title, 'WKD', special.price_change))
+                else:
+                    if special.special_type == 'WKD' and date.today().isoweekday() in [5,6]:
+                        # now occurs on a weekend date
+                        result.append((variation.product.title, 'WKD', special.price_change))
+            items_done.append(item)
+        return result
     
     def has_reservables(self):
         for item in self:
@@ -824,8 +860,9 @@ class CartItem(SelectedProduct):
             cart_reservations = ReservableProductCartReservation.objects.filter(cart=self.cart)
             for cart_reservation in cart_reservations:
                 # delete reservation if not moved to an order
-                order_reservation = ReservableProductOrderReservation.objects.get(reservation=cart_reservation.reservation)
-                if not order_reservation:
+                try:
+                    order_reservation = ReservableProductOrderReservation.objects.get(reservation=cart_reservation.reservation)
+                except:
                     cart_reservation.reservation.delete()
                 cart_reservation.delete()
         super(CartItem, self).delete(*args, **kwargs)
