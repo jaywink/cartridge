@@ -228,6 +228,7 @@ class ReservableProduct(Product):
         """
         Check reservations to see if available
         """
+        to_date += datetime.timedelta(days=-1)
         reservations = self.reservations.filter(date__range=(from_date, to_date))
         if len(reservations) > 0:
             return False
