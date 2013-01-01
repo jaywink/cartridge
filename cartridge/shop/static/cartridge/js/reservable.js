@@ -1,8 +1,15 @@
 
 function isAvailable(date) {
-    if (typeof reservedDays[date.getFullYear()] !== 'undefined' &&
-            typeof reservedDays[date.getFullYear()][date.getMonth()+1] !== 'undefined' ){
-        if (reservedDays[date.getFullYear()][date.getMonth()+1].indexOf(date.getDate()) > -1) {
+    var curDate = new Date();
+    if (datepickerTarget == '#id_to_date') {
+        // allow selecting next day
+        curDate.setDate(date.getDate() - 1);
+    } else {
+        curDate.setDate(date.getDate());
+    }
+    if (typeof reservedDays[curDate.getFullYear()] !== 'undefined' &&
+            typeof reservedDays[curDate.getFullYear()][curDate.getMonth()+1] !== 'undefined' ){
+        if (reservedDays[curDate.getFullYear()][curDate.getMonth()+1].indexOf(curDate.getDate()) > -1) {
             return [false, "reserved"];
         } else {
             return [true];
@@ -37,14 +44,16 @@ function validateAddToCartButton(dates) {
     }
     // make sure no reservations between dates
     curDay = dates[0];
+    var lastDay = new Date();
+    lastDay.setDate(dates[1].getDate() -1);
     while (true) {
         curDay.setDate(curDay.getDate() + 1);
+        if (curDay >= lastDay) {
+            break;
+        }
         if (! isAvailable(curDay)[0]) {
             $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
             return;
-        }
-        if (curDay >= dates[1]) {
-            break;
         }
     }
     $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
@@ -71,7 +80,7 @@ $(document).ready(function(){
         },
         firstDay: 1,
         minDate: 0,
-        maxDate: 120,
+        maxDate: 150,
         dateFormat: "dd.mm.yy"
     });
     $("#datepicker-reservations").datepicker("show");
