@@ -563,11 +563,6 @@ class Order(models.Model):
                             choices=settings.SHOP_ORDER_STATUS_CHOICES,
                             default=settings.SHOP_ORDER_STATUS_CHOICES[0][0])
 
-    # External order ID - if order is saved via external hook, 
-    # for example a reservation
-    external_order_id = models.IntegerField(_("External Order ID"), 
-        null=True, blank=True)
-
     objects = managers.OrderManager()
 
     # These are fields that are stored in the session. They're copied to
@@ -900,6 +895,11 @@ class OrderItem(SelectedProduct):
     A selected product in a completed order.
     """
     order = models.ForeignKey("Order", related_name="items")
+    
+    # External order ID - if order is saved via external hook, 
+    # for example a reservation
+    external_order_id = models.IntegerField(_("External Order ID"), 
+        null=True, blank=True)
 
 
 class ProductAction(models.Model):
