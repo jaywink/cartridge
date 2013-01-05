@@ -1,6 +1,6 @@
 
 function isAvailable(date) {
-    var curDate = new Date();
+    var curDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     if (datepickerTarget == '#id_to_date') {
         // allow selecting next day
         curDate.setDate(date.getDate() - 1);
