@@ -213,6 +213,16 @@ class ReservableProduct(Product):
                     reservation = ReservableProductReservation(date=datetime.date(year, month, day), product=self)
                     reservation.save()
                     
+    def reserve_via_hook(self, from_date, to_date, infotext):
+        """
+        Create reservation via hook in external system.
+        Should return either reservation number in external system
+        or -1 for error.
+        """
+        hook = __import__(self.hook_module)
+        manage = hook.reservation.Manage()
+        return manage.reserve(from_date.strftime('%d.%m.%Y'), to_date.strftime('%d.%m.%Y'), str(infotext))
+                    
     def reservations_to_json(self):
         output = {}
         for reservation in self.reservations.all():
@@ -609,15 +619,34 @@ class Order(models.Model):
                 pass
             else:
                 if variation.product.content_model == 'reservableproduct':
+                    reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
                     # we also create a reservable order reservation
                     for date in utils.daterange(item.from_date, item.to_date):
-                        reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
                         reservation = ReservableProductReservation.objects.get(date=date, product=reservableproduct)
                         if reservation:
                             reservation_order = ReservableProductOrderReservation(order=self, reservation=reservation)
                             reservation_order.save()
                 variation.update_stock(item.quantity * -1)
                 variation.product.actions.purchased()
+        # create reservations in external hook for reservable products (if any)
+        if self.has_reservables:
+            for item in self.items.all():
+                try:
+                    variation = ProductVariation.objects.get(sku=item.sku)
+                except ProductVariation.DoesNotExist:
+                    pass
+                else:
+                    if variation.product.content_model == 'reservableproduct':
+                        # create reservation via hook (if any)
+                        print "** trying to reserve via hook:", item.from_date, item.to_date, self.id
+                        external_order_id = reservableproduct.reserve_via_hook(item.from_date, item.to_date, self.id)
+                        print "** external_order_id", external_order_id
+                        if external_order_id == -1 or not external_order_id:
+                            # External hook reported an error
+                            # TODO: send extra notice to shop admins to process this manually
+                            pass
+                        item.external_order_id = external_order_id
+                        item.save()
         code = request.session.get('discount_code')
         if code:
             DiscountCode.objects.active().filter(code=code).update(
@@ -650,7 +679,7 @@ class Order(models.Model):
     invoice.short_description = ""
     
     def has_reservables(self):
-        for item in self.items:
+        for item in self.items.all():
             if item.from_date and item.to_date:
                 return True
         return False
