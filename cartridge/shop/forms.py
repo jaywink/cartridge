@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from copy import copy
 from datetime import date
@@ -85,8 +86,8 @@ class AddProductForm(forms.Form):
                     self.fields[name] = field
         if self._product.content_model == 'reservableproduct':
             # ReservableProduct needs from/to dates and does not need quantity
-            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("From date"))
-            self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label=_("To date"))
+            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label="Tulopäivä")
+            self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label="Lähtöpäivä")
             self.fields["quantity"] = forms.IntegerField(min_value=1, initial=1, widget=forms.HiddenInput())
 
     def clean(self):
