@@ -71,16 +71,17 @@
 {% endeditable %}
 
 {% if product.available and has_available_variations %}
+<h4>Hinnat:</h4>
 <ul id="variations" class="unstyled">
 	{% for variation in variations %}
 	<li id="variation-{{ variation.sku }}"
 		{% if not variation.default %}style="display:none;"{% endif %}>
 		{% if variation.has_price %}
 			{% if variation.on_sale %}
-				<span class="old-price">{{ variation.unit_price|currency }}</span>
+				<span class="old-price">{{ variation.unit_price|currency }} / yö</span>
 				{% trans "On sale:" %}
 			{% endif %}
-			<span class="price">{{ variation.price|currency }}</span>
+			<span class="price">{{ variation.price|currency }} / yö</span>
 		{% else %}
 		    {% if has_available_variations %}
 		    {% trans "The selected options are currently unavailable." %}
@@ -92,7 +93,7 @@
 <form method="post" id="add-cart" class="form-horizontal form-shop">
     {% csrf_token %}
     {% fields_for add_product_form %}
-    <div id="datepicker-reservations"></div>
+    <div id="datepicker-reservations" style="margin-left: 160px;"></div>
     <div class="form-actions clearfix">
         <div class="form-actions-wrap">
         <input type="submit" class="btn btn-primary btn-large" name="add_cart" value="{% trans "Buy" %}">
