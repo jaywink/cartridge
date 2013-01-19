@@ -81,7 +81,8 @@ $(document).ready(function(){
         firstDay: 1,
         minDate: 0,
         maxDate: 150,
-        dateFormat: "dd.mm.yy"
+        dateFormat: "dd.mm.yy",
+        numberOfMonths: 2
     });
     $("#datepicker-reservations").datepicker("show");
 });
