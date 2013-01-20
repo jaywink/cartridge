@@ -23,8 +23,8 @@
 		<th>{% trans "Unit Price" %}</th>
 		<th class="center">{% trans "Qty" %}</th>
         {% if request.cart.has_reservables %}
-            <th class="center">From date</th>
-            <th class="center">To date</th>    
+            <th class="center">{% trans "From date" %}</th>
+            <th class="center">{% trans "To date" %}</th>    
         {% endif %}
 		<th>{% trans "Price" %}</th>
 		<th class="center">{% trans "Remove?" %}</th>
@@ -63,7 +63,7 @@
         {% for special in request.cart.special_prices %}
             <tr>
                 {% if special.1 == 'WKD' %}
-                    <td colspan="4" class="left">Weekend</td>
+                    <td colspan="4" class="left">{% trans 'Weekend' %}</td>
                 {% endif %}
                 <td colspan="3" class="left">{{ special.0 }}</td>
                 <td class="center">{{ special.2|currency }}</td>
