@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-01-20 21:45+0200\n"
+"POT-Creation-Date: 2013-01-20 22:02+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,7 +36,7 @@ msgstr ""
 
 #: admin.py:309
 msgid "Items"
-msgstr ""
+msgstr "Tuotetta"
 
 #: admin.py:329
 msgid "Billing details"
@@ -223,19 +223,19 @@ msgstr ""
 
 #: defaults.py:252
 msgid "Recently added"
-msgstr ""
+msgstr "Viimeksi lisätyt"
 
 #: defaults.py:253
 msgid "Highest rated"
-msgstr ""
+msgstr "Korkeimmin arvioidut"
 
 #: defaults.py:254
 msgid "Least expensive"
-msgstr ""
+msgstr "Halvimmat"
 
 #: defaults.py:255
 msgid "Most expensive"
-msgstr ""
+msgstr "Kalleimmat"
 
 #: defaults.py:261
 msgid "Use product variations"
@@ -264,7 +264,9 @@ msgstr "Koko aikajakso ei ole varattavissa."
 
 #: forms.py:32
 msgid "Cannot edit quantity of reservable product."
-msgstr "Varattavan tuotteen määrää ostoskorissa ei voi muokata. Poista varaus kokonaisena."
+msgstr ""
+"Varattavan tuotteen määrää ostoskorissa ei voi muokata. Poista varaus "
+"kokonaisena."
 
 #: forms.py:42 models.py:843 templates/shop/order_history.html:20
 msgid "Quantity"
@@ -321,11 +323,11 @@ msgstr ""
 
 #: models.py:43 models.py:844
 msgid "Unit price"
-msgstr ""
+msgstr "Yksikköhinta"
 
 #: models.py:45
 msgid "Sale price"
-msgstr ""
+msgstr "Alennushinta"
 
 #: models.py:46
 msgid "Sale start"
@@ -780,7 +782,7 @@ msgstr "per yksikkö"
 msgid "1 item"
 msgid_plural "%(cart_quantity)s items"
 msgstr[0] "1 tuote"
-msgstr[1] "%(_quantity)s tuotetta"
+msgstr[1] "%(cart_quantity)s tuotetta"
 
 #: templates/includes/user_panel.html:6
 msgid "in cart"
@@ -794,8 +796,8 @@ msgstr "Kassalle"
 #, python-format
 msgid "Wishlist contains 1 item"
 msgid_plural " Wishlist contains %(wishlist_count)s items"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Muistilistassa on yksi tuote"
+msgstr[1] "Muistilistassa on %(wishlist_count)s tuotetta"
 
 #: templates/pages/category.html:38
 msgid "Sort by"
@@ -819,7 +821,8 @@ msgid ""
 "<a href=\"%(signup_url)s?next=%(next)s\">sign up</a>.\n"
 msgstr ""
 "\n"
-"Jos sinulla on ennestään käyttäjätili tai haluat luoda sellaisen, ole hyvä ja\n"
+"Jos sinulla on ennestään käyttäjätili tai haluat luoda sellaisen, ole hyvä "
+"ja\n"
 "<a href=\"%(login_url)s?next=%(next)s\">kirjaudu sisään</a> tai\n"
 "<a href=\"%(signup_url)s?next=%(next)s\">rekisteröidy</a>.\n"
 
@@ -847,7 +850,7 @@ msgstr "Määrä"
 
 #: templates/shop/cart.html:29 templates/shop/includes/order_details.html:44
 msgid "Price"
-msgstr "Yksikköhinta"
+msgstr "Hinta"
 
 #: templates/shop/cart.html:30
 msgid "Remove?"
@@ -909,7 +912,7 @@ msgstr "Ostoskori on tyhjä."
 msgid ""
 "This may be due to your session timing out after a period of inactivity."
 msgstr ""
-"Tämä saattaa johtua istuntosi vanhenemisesta.
+"Tämä saattaa johtua istuntosi vanhenemisesta."
 
 #: templates/shop/checkout.html:79
 msgid "We apologize for the inconvenience."
@@ -990,15 +993,15 @@ msgstr "Tuotteeseen liittyvät tuotteet"
 #: templates/shop/wishlist.html:4 templates/shop/wishlist.html.py:5
 #: templates/shop/wishlist.html:9
 msgid "Your Wishlist"
-msgstr ""
+msgstr "Muistilista"
 
 #: templates/shop/wishlist.html:31
 msgid "Remove"
-msgstr ""
+msgstr "Poista"
 
 #: templates/shop/wishlist.html:38
 msgid "Your wishlist is empty."
-msgstr ""
+msgstr "Muistilista on tyhjä."
 
 #: templates/shop/includes/order_details.html:10
 msgid "Your Details"
