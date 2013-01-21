@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 from operator import iand, ior
 
@@ -7,6 +6,7 @@ from django.db import models
 from django.db.models.signals import m2m_changed
 from django.db.models import CharField, F, Q
 from django.db.models.base import ModelBase
+from django.db.utils import DatabaseError
 from django.dispatch import receiver
 from django.utils.translation import ugettext, ugettext_lazy as _
 
@@ -16,7 +16,7 @@ from mezzanine.core.managers import DisplayableManager
 from mezzanine.core.models import Displayable, RichText, Orderable
 from mezzanine.generic.fields import RatingField
 from mezzanine.pages.models import Page
-from mezzanine.utils.models import AdminThumbMixin
+from mezzanine.utils.models import AdminThumbMixin, upload_to
 from mezzanine.utils.timezone import now
 
 from cartridge.shop import fields, managers
@@ -172,7 +172,8 @@ class ProductImage(Orderable):
     for the product.
     """
 
-    file = models.ImageField(_("Image"), upload_to="product")
+    file = models.ImageField(_("Image"),
+        upload_to=upload_to("shop.ProductImage.file", "product"))
     description = CharField(_("Description"), blank=True, max_length=100)
     product = models.ForeignKey("Product", related_name="images")
 
@@ -331,15 +332,13 @@ class Category(Page, RichText):
     """
 
     featured_image = FileField(verbose_name=_("Featured Image"),
-                               upload_to="shop", format="Image",
-                               max_length=255, null=True, blank=True)
-    products = models.ManyToManyField("Product",
+        upload_to=upload_to("shop.Category.featured_image", "shop"),
+        format="Image", max_length=255, null=True, blank=True)
+    products = models.ManyToManyField("Product", blank=True,
                                      verbose_name=_("Products"),
-                                     blank=True,
                                      through=Product.categories.through)
-    options = models.ManyToManyField("ProductOption",
+    options = models.ManyToManyField("ProductOption", blank=True,
                                      verbose_name=_("Product options"),
-                                     blank=True,
                                      related_name="product_options")
     sale = models.ForeignKey("Sale", verbose_name=_("Sale"),
                              blank=True, null=True)
@@ -494,7 +493,10 @@ class Order(models.Model):
         for field in self.session_fields:
             if field in request.session:
                 del request.session[field]
-        del request.session["order"]
+        try:
+            del request.session["order"]
+        except KeyError:
+            pass
         for item in request.cart:
             try:
                 variation = ProductVariation.objects.get(sku=item.sku)
@@ -781,7 +783,7 @@ class Sale(Discount):
                               "sale_to": self.valid_to,
                               "sale_from": self.valid_from}
                     priced_objects.filter(**extra_filter).update(**update)
-                except OperationalError:
+                except (OperationalError, DatabaseError):
                     # Work around for MySQL which does not allow update
                     # to operate on subquery where the FROM clause would
                     # have it operate on the same table.
