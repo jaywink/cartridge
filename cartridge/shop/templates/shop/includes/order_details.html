@@ -47,8 +47,8 @@
 	<tr>
     	<td>{{ item.description }}</td>
         {% if has_reservables %}
-            <td align="center">{{ item.from_date }}</td>
-            <td align="center">{{ item.to_date }}</td>
+            <td align="center">{{ item.from_date|default_if_none:"-" }}</td>
+            <td align="center">{{ item.to_date|default_if_none:"-" }}</td>
         {% endif %}
     	<td align="right" valign="top">{{ item.unit_price|currency }}</td>
     	<td align="right" valign="top">{{ item.quantity }}</td>
