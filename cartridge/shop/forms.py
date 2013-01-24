@@ -101,8 +101,11 @@ class AddProductForm(forms.Form):
         # a variation.
         data = self.cleaned_data.copy()
         quantity = data.pop("quantity")
-        from_date = data.pop("from_date")
-        to_date = data.pop("to_date")
+        try:
+            from_date = data.pop("from_date")
+            to_date = data.pop("to_date")
+        except:
+            pass
         # Ensure the product has a price if adding to cart.
         if self._to_cart:
             data["unit_price__isnull"] = False
