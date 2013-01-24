@@ -161,6 +161,10 @@ def send_order_email(request, order):
     settings.use_editable()
     order_context = {"order": order, "request": request,
                      "order_items": order.items.all()}
+    if order.has_reservables:
+        order_context["has_reservables"] = True
+    else:
+        order_context["has_reservables"] = False
     order_context.update(order.details_as_dict())
     try:
         get_template("shop/email/order_receipt.html")
