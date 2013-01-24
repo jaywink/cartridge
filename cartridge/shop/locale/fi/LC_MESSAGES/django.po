@@ -977,7 +977,7 @@ msgstr ""
 
 #: templates/shop/product.html:93 templates/shop/wishlist.html:30
 msgid "Buy"
-msgstr ""
+msgstr "Lisää koriin"
 
 #: templates/shop/product.html:94
 msgid "Save for later"
