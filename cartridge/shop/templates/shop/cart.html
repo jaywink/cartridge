@@ -52,8 +52,8 @@
 		<td>{{ item.unit_price|currency }}</td>
 		<td class="quantity">{{ form.quantity }}</td>
         {% if request.cart.has_reservables %}
-            <td class="center">{{ item.from_date }}</td>
-            <td class="center">{{ item.to_date }}</td>
+            <td class="center">{{ item.from_date|default_if_none:"-" }}</td>
+            <td class="center">{{ item.to_date|default_if_none:"-" }}</td>
         {% endif %}
 		<td>{{ item.total_price|currency }}</td>
 		<td class="center">{{ form.DELETE }}</td>
