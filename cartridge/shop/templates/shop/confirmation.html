@@ -8,7 +8,9 @@
 	<legend>{% trans "Billing Details" %}</legend>
     <ul class="unstyled">
 	    {% for field, value in form.billing_detail_fields.values %}
-        <li><label>{{ field }}:</label> {{ value }}</li>
+            {% if field != "Alue" %}
+                <li><label>{{ field }}:</label> {{ value }}</li>
+            {% endif %}
 	    {% endfor %}
 	</ul>
 </fieldset>
@@ -17,7 +19,9 @@
 	<legend>{% trans "Shipping Details" %}</legend>
 	<ul class="unstyled">
 	    {% for field, value in form.shipping_detail_fields.values %}
-        <li><label>{{ field }}:</label> {{ value }}</li>
+            {% if field != "Alue" %}
+                <li><label>{{ field }}:</label> {{ value }}</li>
+            {% endif %}
 	    {% endfor %}
 	    {% for field, value in form.additional_instructions_field.values %}
         <li><label>{{ field }}:</label> {{ value }}</li>

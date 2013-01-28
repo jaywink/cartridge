@@ -91,3 +91,9 @@
 .confirmation ul {margin:20px;}
 .confirmation li {margin:5px 0; color:#999;}
 .confirmation label {display:inline; padding-right:5px; width:170px;}
+
+/* Kakaravaara */
+.input_id_billing_detail_state,
+.input_id_shipping_detail_state {
+    display: none;
+}
