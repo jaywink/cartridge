@@ -206,13 +206,19 @@ class ReservableProduct(Product):
         month = today.month
         year = today.year
         days = manage.list_reserved_dates(month, year)
-        print days
+        # clear old reservations from hook
+        # we can tell those because they have no cart or order link
+        reservations = self.reservations.filter(date__gte=today)
+        for reservation in reservations:
+            if len(reservation.in_orders.all()) == 0 and len(reservation.in_carts.all()) == 0:
+                reservation.delete()
         for year, months in days.items():
             for month, days in months.items():
                 for day in days:
-                    reservation = ReservableProductReservation(date=datetime.date(year, month, day), product=self)
-                    reservation.save()
-                    
+                    if datetime.date(year, month, day) >= today:
+                        reservation = ReservableProductReservation(date=datetime.date(year, month, day), product=self)
+                        reservation.save()
+                        
     def reserve_via_hook(self, from_date, to_date, infotext):
         """
         Create reservation via hook in external system.
