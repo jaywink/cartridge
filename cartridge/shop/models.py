@@ -666,8 +666,7 @@ class Order(models.Model):
                     if variation.product.content_model == 'reservableproduct':
                         # create reservation via hook (if any)
                         print "** trying to reserve via hook:", item.from_date, item.to_date, self.id
-                        #external_order_id = reservableproduct.reserve_via_hook(item.from_date, item.to_date, self.id)
-                        external_order_id = -1  # TODO: disable for now..
+                        external_order_id = reservableproduct.reserve_via_hook(item.from_date, item.to_date, self.id)
                         print "** external_order_id", external_order_id
                         if external_order_id == -1 or not external_order_id:
                             # External hook reported an error
