@@ -79,7 +79,6 @@ $(document).ready(function(){
             validateAddToCartButton(dates);
         },
         minDate: 0,
-        maxDate: 150,
         numberOfMonths: 2,
         // copied finnish localization from jquery language file here - couldn't get it to work otherwise :P
         closeText: 'Sulje',
