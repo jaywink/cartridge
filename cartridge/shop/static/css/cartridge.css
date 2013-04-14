@@ -94,6 +94,11 @@
 
 /* Kakaravaara */
 .input_id_billing_detail_state,
-.input_id_shipping_detail_state {
+.input_id_billing_detail_street,
+.input_id_billing_detail_city,
+.input_id_billing_detail_postcode,
+.input_id_billing_detail_country,
+.input_id_same_billing_shipping,
+#shipping_fields {
     display: none;
 }

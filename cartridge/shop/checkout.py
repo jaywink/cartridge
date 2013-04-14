@@ -125,6 +125,7 @@ def initial_order_data(request):
         shipping(f) in OrderForm._meta.fields and
         initial.get(f, "") != initial.get(shipping(f), "")]):
         initial["same_billing_shipping"] = False
+    initial["same_billing_shipping"] = True
     return initial
 
 
