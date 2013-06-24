@@ -7,10 +7,10 @@ except ImportError:
     from md5 import new as digest
 
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
 from mezzanine.conf import settings
-from mezzanine.utils.timezone import now
 
 
 class EmptyCart(object):
@@ -81,6 +81,14 @@ def set_shipping(request, shipping_type, shipping_total):
     """
     request.session["shipping_type"] = shipping_type
     request.session["shipping_total"] = shipping_total
+
+
+def set_tax(request, tax_type, tax_total):
+    """
+    Stores the tax type and total in the session.
+    """
+    request.session["tax_type"] = tax_type
+    request.session["tax_total"] = tax_total
 
 
 def sign(value):

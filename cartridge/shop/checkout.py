@@ -10,7 +10,7 @@ from mezzanine.conf import settings
 from mezzanine.utils.email import send_mail_template
 
 from cartridge.shop.models import Order
-from cartridge.shop.utils import set_shipping, sign
+from cartridge.shop.utils import set_shipping, set_tax, sign
 
 
 class CheckoutError(Exception):
@@ -33,10 +33,24 @@ def default_billship_handler(request, order_form):
     ``cartridge.shop.utils.set_shipping``. The Cart object is also
     accessible via ``request.cart``
     """
-    if not request.session.get('free_shipping'):
+    if not request.session.get("free_shipping"):
         settings.use_editable()
         set_shipping(request, _("Flat rate shipping"),
                      settings.SHOP_DEFAULT_SHIPPING_VALUE)
+
+
+def default_tax_handler(request, order_form):
+    """
+    Default tax handler - called immediately after the handler defined
+    by ``SHOP_HANDLER_BILLING_SHIPPING``. Implement your own and
+    specify the path to import it from via the setting
+    ``SHOP_HANDLER_TAX``. This function will typically contain any tax
+    calculation where the tax amount can then be set using the function
+    ``cartridge.shop.utils.set_tax``. The Cart object is also
+    accessible via ``request.cart``
+    """
+    settings.use_editable()
+    set_tax(request, _("Tax"), 0)
 
 
 def default_payment_handler(request, order_form, order):
@@ -61,7 +75,7 @@ def default_order_handler(request, order_form, order):
     pass
 
 
-def initial_order_data(request):
+def initial_order_data(request, form_class=None):
     """
     Return the initial data for the order form, trying the following in
     order:
@@ -74,21 +88,33 @@ def initial_order_data(request):
     - matching fields on an authenticated user and profile object
     """
     from cartridge.shop.forms import OrderForm
-    if request.method == "POST":
-        return dict(request.POST.items())
-    if "order" in request.session:
-        return request.session["order"]
-    previous_lookup = {}
-    if request.user.is_authenticated():
-        previous_lookup["user_id"] = request.user.id
-    remembered = request.COOKIES.get("remember", "").split(":")
-    if len(remembered) == 2 and remembered[0] == sign(remembered[1]):
-        previous_lookup["key"] = remembered[1]
     initial = {}
-    if previous_lookup:
-        previous_orders = Order.objects.filter(**previous_lookup).values()[:1]
-        if len(previous_orders) > 0:
-            initial.update(previous_orders[0])
+    if request.method == "POST":
+        initial = dict(request.POST.items())
+        try:
+            initial = form_class.preprocess(initial)
+        except (AttributeError, TypeError):
+            # form_class has no preprocess method, or isn't callable.
+            pass
+        # POST on first step won't include the "remember" checkbox if
+        # it isn't checked, and it'll then get an actual value of False
+        # when it's a hidden field - so we give it an empty value when
+        # it's missing from the POST data, to persist it not checked.
+        initial.setdefault("remember", "")
+    if not initial:
+        # Look for a previous order.
+        if "order" in request.session:
+            return request.session["order"]
+        lookup = {}
+        if request.user.is_authenticated():
+            lookup["user_id"] = request.user.id
+        remembered = request.COOKIES.get("remember", "").split(":")
+        if len(remembered) == 2 and remembered[0] == sign(remembered[1]):
+            lookup["key"] = remembered[1]
+        if lookup:
+            previous = Order.objects.filter(**lookup).values()[:1]
+            if len(previous) > 0:
+                initial.update(previous[0])
     if not initial and request.user.is_authenticated():
         # No previous order data - try and get field values from the
         # logged in user. Check the profile model before the user model
@@ -150,12 +176,14 @@ def send_order_email(request, order):
         warn("Shop email receipt templates have moved from "
              "templates/shop/email/ to templates/email/")
     send_mail_template(settings.SHOP_ORDER_EMAIL_SUBJECT,
-        receipt_template, settings.SHOP_ORDER_FROM_EMAIL,
-        order.billing_detail_email, context=order_context,
-        fail_silently=settings.DEBUG)
+                       receipt_template, settings.SHOP_ORDER_FROM_EMAIL,
+                       order.billing_detail_email, context=order_context,
+                       fail_silently=settings.DEBUG,
+                       addr_bcc=settings.SHOP_ORDER_EMAIL_BCC or None)
 
 
 # Set up some constants for identifying each checkout step.
+
 CHECKOUT_STEPS = [{"template": "billing_shipping", "url": "details",
                    "title": _("Details")}]
 CHECKOUT_STEP_FIRST = CHECKOUT_STEP_PAYMENT = CHECKOUT_STEP_LAST = 1
