@@ -347,7 +347,7 @@ class OrderForm(FormsetForm, DiscountForm):
         # need to make a copy.
         data = copy(data)
 
-		for field in data:
+        for field in data:
             billing = field.replace("shipping_detail", "billing_detail")
             if "shipping_detail" in field and billing in data:
                 data[field] = data[billing]
