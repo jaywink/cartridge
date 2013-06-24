@@ -1,7 +1,7 @@
 
 from socket import gethostname
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from mezzanine.conf import register_setting
 
@@ -58,7 +58,9 @@ register_setting(
     description=_("Sequence of setting names available within templates."),
     editable=False,
     default=("SHOP_CARD_TYPES", "SHOP_CATEGORY_USE_FEATURED_IMAGE",
-             "SHOP_CHECKOUT_STEPS_SPLIT", "SHOP_PRODUCT_SORT_OPTIONS",),
+             "SHOP_CHECKOUT_STEPS_SPLIT", "SHOP_PAYMENT_STEP_ENABLED",
+             "SHOP_PRODUCT_SORT_OPTIONS", "SHOP_USE_RATINGS",
+             "SHOP_USE_WISHLIST"),
     append=True,
 )
 
@@ -177,6 +179,17 @@ register_setting(
 )
 
 register_setting(
+    name="SHOP_HANDLER_TAX",
+    label=_("Tax Handler"),
+    description="Dotted package path and class name of the function "
+        "called upon submission of the billing/shipping checkout step. This "
+        "is where tax calculations can be performed and set using the "
+        "function ``cartridge.shop.utils.set_tax``.",
+    editable=False,
+    default="cartridge.shop.checkout.default_tax_handler",
+)
+
+register_setting(
     name="SHOP_HANDLER_ORDER",
     label=_("Order Handler"),
     description="Dotted package path and class name of the function that "
@@ -226,6 +239,14 @@ register_setting(
 )
 
 register_setting(
+    name="SHOP_ORDER_EMAIL_BCC",
+    label=_("BCC receipts to"),
+    description=_("All order receipts will be BCCd to this address."),
+    editable=True,
+    default="",
+)
+
+register_setting(
     name="SHOP_ORDER_STATUS_CHOICES",
     description="Sequence of value/name pairs for order statuses.",
     editable=False,
@@ -260,6 +281,23 @@ register_setting(
     name="SHOP_USE_VARIATIONS",
     label=_("Use product variations"),
     description="Use product variations.",
+    editable=False,
+    default=True,
+)
+
+register_setting(
+    name="SHOP_USE_RATINGS",
+    label=_("Use product ratings"),
+    description="Show the product rating form, and allow browsing by rating.",
+    editable=False,
+    default=True,
+)
+
+register_setting(
+    name="SHOP_USE_WISHLIST",
+    label=_("Use product wishlist"),
+    description="Show the links to the wishlist, and allow adding "
+        "products to it.",
     editable=False,
     default=True,
 )

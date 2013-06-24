@@ -29,7 +29,7 @@ Features
 
   * Hierarchical categories
   * Easily configurable product options (colours, sizes, etc.)
-  * Hooks for shipping calculations and payment gateways
+  * Hooks for tax/shipping calculations and payment gateways
   * Sale pricing
   * Promotional discount codes
   * PDF invoice generation (for packing slips)
@@ -181,14 +181,21 @@ Sites Using Cartridge
   * `Charles Koll Jewelry <http://charleskoll.com>`_
   * `Puraforce Remedies <http://puraforceremedies.com/>`_
   * `Adrenaline <http://www.adrln.com/>`_
+  * `The Peculiar Store <http://thepeculiarstore.com>`_
+  * `KisanHub <http://www.kisanhub.com/>`_
+  * `Kegbot <http://kegbot.org>`_
+  * `Amblitec <http://www.amblitec.com>`_
+  * `ZigZag Bags <http://www.zigzagbags.com.au>`_
+
 
 .. _`Django`: http://djangoproject.com/
 .. _`BSD licensed`: http://www.linfo.org/bsdlicense.html
 .. _`Mezzanine live demo`: http://mezzanine.jupo.org/
+.. _`Mezzanine`: http://mezzanine.jupo.org/
+.. _`Mezzanine Project`: http://mezzanine.jupo.org/
 .. _`pip`: http://www.pip-installer.org/
 .. _`FAQ section of the Mezzanine documentation`: http://mezzanine.jupo.org/docs/frequently-asked-questions.html#how-can-i-add-mezzanine-to-an-existing-django-project
 .. _`setuptools`: http://pypi.python.org/pypi/setuptools
-.. _`Mezzanine`: http://mezzanine.jupo.org/
 .. _`South`: http://south.aeracode.org/
 .. _`Github`: http://github.com/stephenmcd/cartridge/
 .. _`Bitbucket`: http://bitbucket.org/stephenmcd/cartridge/

@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 
 from django.db.models import Manager, Q
 from django.utils.datastructures import SortedDict
+from django.utils.timezone import now
 
 from mezzanine.conf import settings
-from mezzanine.utils.timezone import now
 
 
 class CartManager(Manager):
@@ -17,14 +17,11 @@ class CartManager(Manager):
         found as well as removing old carts prior to creating a new
         cart.
         """
-        n = now()
-        expiry_minutes = timedelta(minutes=settings.SHOP_CART_EXPIRY_MINUTES)
-        expiry_time = n - expiry_minutes
         cart_id = request.session.get("cart", None)
         cart = None
         if cart_id:
             try:
-                cart = self.get(last_updated__gte=expiry_time, id=cart_id)
+                cart = self.current().get(id=cart_id)
             except self.model.DoesNotExist:
                 request.session["cart"] = None
                 old_carts = self.filter(last_updated__lt=expiry_time)
@@ -34,13 +31,37 @@ class CartManager(Manager):
                     old_cart.delete()
             else:
                 # Update timestamp and clear out old carts.
-                cart.last_updated = n
+                cart.last_updated = now()
                 cart.save()
-                self.filter(last_updated__lt=expiry_time).delete()
+                self.expired().delete()
         if not cart:
+            # Forget what checkout step we were up to.
+            try:
+                del request.session["order"]["step"]
+                request.session.modified = True
+            except KeyError:
+                pass
             from cartridge.shop.utils import EmptyCart
             cart = EmptyCart(request)
         return cart
+
+    def expiry_time(self):
+        """
+        Datetime for expired carts.
+        """
+        return now() - timedelta(minutes=settings.SHOP_CART_EXPIRY_MINUTES)
+
+    def current(self):
+        """
+        Unexpired carts.
+        """
+        return self.filter(last_updated__gte=self.expiry_time())
+
+    def expired(self):
+        """
+        Expired carts.
+        """
+        return self.filter(last_updated__lt=self.expiry_time())
 
 
 class OrderManager(Manager):
