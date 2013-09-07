@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "shop/base.html" %}
 {% load mezzanine_tags shop_tags i18n future %}
 
 {% block meta_title %}{% trans "Your Cart" %}{% endblock %}
@@ -13,9 +13,15 @@
 {% if request.cart.has_items %}
 <form method="post" class="form-cart form-shop">
 {% csrf_token %}
+{% if cart_formset.errors %}
+<div class="control-group error">
+<span class="help-inline">
 {% for error in cart_formset.errors %}
 {% if error.values.0 %}{{ error.values.0 }}{% endif %}
 {% endfor %}
+</span>
+</div>
+{% endif %}
 {{ cart_formset.management_form }}
 <table class="table table-striped">
 	<tr>
@@ -53,7 +59,9 @@
 </table>
 <div class="form-actions clearfix">
     <div class="form-actions-wrap">
-    <a href="{% url "shop_checkout" %}" class="btn btn-primary btn-large">{% trans "Go to Checkout" %}</a>
+    <a href="{% url "shop_checkout" %}" class="btn btn-primary btn-large">
+        {% if request.session.order.step %}{% trans "Return to Checkout" %}{% else %}{% trans "Go to Checkout" %}{% endif %}
+    </a>
     <input type="submit" name="update_cart" class="btn btn-large" value="{% trans "Update Cart" %}">
     </div>
 </div>

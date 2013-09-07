@@ -10,11 +10,11 @@ from django.forms.models import BaseInlineFormSet, ModelFormMetaclass
 from django.forms.models import inlineformset_factory
 from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from mezzanine.conf import settings
 from mezzanine.core.templatetags.mezzanine_tags import thumbnail
-from mezzanine.utils.timezone import now
 
 from cartridge.shop import checkout
 from cartridge.shop.models import Product, ProductOption, ProductVariation
@@ -66,8 +66,11 @@ class AddProductForm(forms.Form):
         # Adding from the product page, remove the sku field
         # and build the choice fields for the variations.
         del self.fields["sku"]
+        option_fields = ProductVariation.option_fields()
+        if not option_fields:
+            return
         option_names, option_labels = zip(*[(f.name, f.verbose_name)
-            for f in ProductVariation.option_fields()])
+            for f in option_fields])
         option_values = zip(*self._product.variations.filter(
             unit_price__isnull=False).values_list(*option_names))
         if option_values:
@@ -134,8 +137,8 @@ class CartItemForm(forms.ModelForm):
         variation = ProductVariation.objects.get(sku=self.instance.sku)
         quantity = self.cleaned_data["quantity"]
         if not variation.has_stock(quantity - self.instance.quantity):
-            error = ADD_PRODUCT_ERRORS["no_stock_quantity"]
-            raise forms.ValidationError(error)
+            error = ADD_PRODUCT_ERRORS["no_stock_quantity"].rstrip(".")
+            raise forms.ValidationError("%s: %s" % (error, quantity))
         return quantity
 
 CartItemFormSet = inlineformset_factory(Cart, CartItem, form=CartItemForm,
@@ -207,6 +210,9 @@ class FormsetForm(object):
         filters = (
             ("^other_fields$", lambda:
                 self.fields.keys()),
+            ("^hidden_fields$", lambda:
+                [n for n, f in self.fields.iteritems()
+                 if isinstance(f.widget, forms.HiddenInput)]),
             ("^(\w*)_fields$", lambda name:
                 [f for f in self.fields.keys() if f.startswith(name)]),
             ("^(\w*)_field$", lambda name:
@@ -368,7 +374,7 @@ class OrderForm(FormsetForm, DiscountForm):
         by custom form classes. The default preprocessor here handles
         copying billing fields to shipping fields if "same" checked.
         """
-        if "same_billing_shipping" in data:
+        if data.get("same_billing_shipping", "") == "on":
             for field in data:
                 bill_field = field.replace("shipping_detail", "billing_detail")
                 if field.startswith("shipping_detail") and bill_field in data:

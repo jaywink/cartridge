@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required
@@ -80,13 +79,11 @@ def product(request, slug, template="shop/product.html"):
                                                       for_user=request.user),
         "add_product_form": add_product_form
     }
-
-    templates = []
+    templates = [u"shop/%s.html" % unicode(product.slug), template]
     # Check for a template matching the page's content model.
     if product.content_model is not None:
         templates.append(u"shop/products/%s.html" % product.content_model)
     templates.append(template)
-
     return render(request, templates, context)
 
 
@@ -96,6 +93,9 @@ def wishlist(request, template="shop/wishlist.html"):
     Display the wishlist and handle removing items from the wishlist and
     adding them to the cart.
     """
+
+    if not settings.SHOP_USE_WISHLIST:
+        raise Http404
 
     skus = request.wishlist
     error = None
@@ -158,6 +158,15 @@ def cart(request, template="shop/cart.html"):
                     cart_formset.save()
                     recalculate_discount(request)
                     info(request, _("Cart updated"))
+                else:
+                    # Reset the cart formset so that the cart
+                    # always indicates the correct quantities.
+                    # The user is shown their invalid quantity
+                    # via the error message, which we need to
+                    # copy over to the new formset here.
+                    errors = cart_formset._errors
+                    cart_formset = CartItemFormSet(instance=request.cart)
+                    cart_formset._errors = errors
         else:
             valid = discount_form.is_valid()
             if valid:
@@ -189,8 +198,10 @@ def checkout_steps(request):
     # Determine the Form class to use during the checkout process
     form_class = get_callable(settings.SHOP_CHECKOUT_FORM_CLASS)
 
-    step = int(request.POST.get("step", checkout.CHECKOUT_STEP_FIRST))
     initial = checkout.initial_order_data(request, form_class)
+    step = int(request.POST.get("step", None)
+               or initial.get("step", None)
+               or checkout.CHECKOUT_STEP_FIRST)
     form = form_class(request, step, initial=initial)
     data = request.POST
     checkout_errors = []
@@ -226,11 +237,11 @@ def checkout_steps(request):
 
             # FINAL CHECKOUT STEP - handle payment and process order.
             if step == checkout.CHECKOUT_STEP_LAST and not checkout_errors:
-                # Create and save the inital order object so that
+                # Create and save the initial order object so that
                 # the payment handler has access to all of the order
                 # fields. If there is a payment error then delete the
                 # order, otherwise remove the cart items from stock
-                # and send the order reciept email.
+                # and send the order receipt email.
                 order = form.save(commit=False)
                 order.setup(request)
                 # Try payment.
@@ -255,7 +266,7 @@ def checkout_steps(request):
                     # Set the cookie for remembering address details
                     # if the "remember" checkbox was checked.
                     response = redirect("shop_complete")
-                    if form.cleaned_data.get("remember") is not None:
+                    if form.cleaned_data.get("remember"):
                         remembered = "%s:%s" % (sign(order.key), order.key)
                         set_cookie(response, "remember", remembered,
                                    secure=request.is_secure())
@@ -266,10 +277,18 @@ def checkout_steps(request):
             # If any checkout errors, assign them to a new form and
             # re-run is_valid. If valid, then set form to the next step.
             form = form_class(request, step, initial=initial, data=data,
-                             errors=checkout_errors)
+                              errors=checkout_errors)
             if form.is_valid():
                 step += 1
                 form = form_class(request, step, initial=initial)
+
+    # Update the step so that we don't rely on POST data to take us back to
+    # the same point in the checkout process.
+    try:
+        request.session["order"]["step"] = step
+        request.session.modified = True
+    except KeyError:
+        pass
 
     step_vars = checkout.CHECKOUT_STEPS[step - 1]
     template = "shop/%s.html" % step_vars["template"]

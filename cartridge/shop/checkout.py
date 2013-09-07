@@ -2,8 +2,6 @@
 Checkout process utilities.
 """
 
-from copy import copy
-
 from django.contrib.auth.models import SiteProfileNotAvailable
 from django.utils.translation import ugettext as _
 from django.template.loader import get_template, TemplateDoesNotExist
@@ -90,27 +88,33 @@ def initial_order_data(request, form_class=None):
     - matching fields on an authenticated user and profile object
     """
     from cartridge.shop.forms import OrderForm
-    if request.method == "POST":
-        data = copy(request.POST)
-        try:
-            data = form_class.preprocess(data)
-        except (AttributeError, TypeError):
-            # form_class has no preprocess attribute, or it isn't callable
-            pass
-        return dict(data.items())
-    if "order" in request.session:
-        return request.session["order"]
-    previous_lookup = {}
-    if request.user.is_authenticated():
-        previous_lookup["user_id"] = request.user.id
-    remembered = request.COOKIES.get("remember", "").split(":")
-    if len(remembered) == 2 and remembered[0] == sign(remembered[1]):
-        previous_lookup["key"] = remembered[1]
     initial = {}
-    if previous_lookup:
-        previous_orders = Order.objects.filter(**previous_lookup).values()[:1]
-        if len(previous_orders) > 0:
-            initial.update(previous_orders[0])
+    if request.method == "POST":
+        initial = dict(request.POST.items())
+        try:
+            initial = form_class.preprocess(initial)
+        except (AttributeError, TypeError):
+            # form_class has no preprocess method, or isn't callable.
+            pass
+        # POST on first step won't include the "remember" checkbox if
+        # it isn't checked, and it'll then get an actual value of False
+        # when it's a hidden field - so we give it an empty value when
+        # it's missing from the POST data, to persist it not checked.
+        initial.setdefault("remember", "")
+    if not initial:
+        # Look for a previous order.
+        if "order" in request.session:
+            return request.session["order"]
+        lookup = {}
+        if request.user.is_authenticated():
+            lookup["user_id"] = request.user.id
+        remembered = request.COOKIES.get("remember", "").split(":")
+        if len(remembered) == 2 and remembered[0] == sign(remembered[1]):
+            lookup["key"] = remembered[1]
+        if lookup:
+            previous = Order.objects.filter(**lookup).values()[:1]
+            if len(previous) > 0:
+                initial.update(previous[0])
     if not initial and request.user.is_authenticated():
         # No previous order data - try and get field values from the
         # logged in user. Check the profile model before the user model
@@ -168,9 +172,10 @@ def send_order_email(request, order):
         warn("Shop email receipt templates have moved from "
              "templates/shop/email/ to templates/email/")
     send_mail_template(settings.SHOP_ORDER_EMAIL_SUBJECT,
-        receipt_template, settings.SHOP_ORDER_FROM_EMAIL,
-        order.billing_detail_email, context=order_context,
-        fail_silently=settings.DEBUG)
+                       receipt_template, settings.SHOP_ORDER_FROM_EMAIL,
+                       order.billing_detail_email, context=order_context,
+                       fail_silently=settings.DEBUG,
+                       addr_bcc=settings.SHOP_ORDER_EMAIL_BCC or None)
 
 
 # Set up some constants for identifying each checkout step.

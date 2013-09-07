@@ -8,6 +8,7 @@ from django.db.models import CharField, F, Q
 from django.db.models.base import ModelBase
 from django.db.utils import DatabaseError
 from django.dispatch import receiver
+from django.utils.timezone import now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from mezzanine.conf import settings
@@ -17,7 +18,6 @@ from mezzanine.core.models import Displayable, RichText, Orderable
 from mezzanine.generic.fields import RatingField
 from mezzanine.pages.models import Page
 from mezzanine.utils.models import AdminThumbMixin, upload_to
-from mezzanine.utils.timezone import now
 
 from cartridge.shop import fields, managers
 
@@ -259,10 +259,15 @@ class ProductVariation(Priced):
         """
         options = []
         for field in self.option_fields():
-            if getattr(self, field.name) is not None:
-                options.append("%s: %s" % (unicode(field.verbose_name),
-                                           getattr(self, field.name)))
-        return ("%s %s" % (unicode(self.product), ", ".join(options))).strip()
+            name = getattr(self, field.name)
+            if name is not None:
+                verbose_name = field.verbose_name
+                if isinstance(verbose_name, str):
+                    verbose_name = verbose_name.decode("utf-8")
+                option = u"%s: %s" % (verbose_name, name)
+                options.append(option)
+        result = u"%s %s" % (unicode(self.product), u", ".join(options))
+        return result.strip()
 
     def save(self, *args, **kwargs):
         """
@@ -305,7 +310,8 @@ class ProductVariation(Priced):
             return None
         if not hasattr(self, "_cached_num_in_stock"):
             num_in_stock = self.num_in_stock
-            items = CartItem.objects.filter(sku=self.sku)
+            carts = Cart.objects.current()
+            items = CartItem.objects.filter(sku=self.sku, cart__in=carts)
             aggregate = items.aggregate(quantity_sum=models.Sum("quantity"))
             num_in_carts = aggregate["quantity_sum"]
             if num_in_carts is not None:
@@ -647,7 +653,7 @@ class SelectedProduct(models.Model):
     """
 
     sku = fields.SKUField()
-    description = CharField(_("Description"), max_length=200)
+    description = CharField(_("Description"), max_length=2000)
     quantity = models.IntegerField(_("Quantity"), default=0)
     unit_price = fields.MoneyField(_("Unit price"), default=Decimal("0"))
     total_price = fields.MoneyField(_("Total price"), default=Decimal("0"))
@@ -674,7 +680,7 @@ class SelectedProduct(models.Model):
 class CartItem(SelectedProduct):
 
     cart = models.ForeignKey("Cart", related_name="items")
-    url = CharField(max_length=200)
+    url = CharField(max_length=2000)
     image = CharField(max_length=200, null=True)
 
     def get_absolute_url(self):

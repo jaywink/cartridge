@@ -112,6 +112,13 @@ Sequence of value/name pairs for types of product options (e.g. Size, Colour).
 
 Default: ``((1, u'Size'), (2, u'Colour'))``
 
+``SHOP_ORDER_EMAIL_BCC``
+------------------------
+
+All order receipts will be BCCd to this address.
+
+Default: ``''``
+
 ``SHOP_ORDER_EMAIL_SUBJECT``
 ----------------------------
 
@@ -154,9 +161,23 @@ Sequence of description/field+direction pairs defining the options available for
 
 Default: ``((u'Recently added', '-date_added'), (u'Highest rated', '-rating_average'), (u'Least expensive', 'unit_price'), (u'Most expensive', '-unit_price'))``
 
+``SHOP_USE_RATINGS``
+--------------------
+
+Show the product rating form, and allow browsing by rating.
+
+Default: ``True``
+
 ``SHOP_USE_VARIATIONS``
 -----------------------
 
 Use product variations.
+
+Default: ``True``
+
+``SHOP_USE_WISHLIST``
+---------------------
+
+Show the links to the wishlist, and allow adding products to it.
 
 Default: ``True``
