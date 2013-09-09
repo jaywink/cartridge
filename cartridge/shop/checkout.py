@@ -165,6 +165,7 @@ def send_order_email(request, order):
         order_context["has_reservables"] = True
     else:
         order_context["has_reservables"] = False
+    order_context["hide_shipping"] = settings.SHOP_ALWAYS_SAME_BILLING_SHIPPING
     order_context.update(order.details_as_dict())
     try:
         get_template("shop/email/order_receipt.html")

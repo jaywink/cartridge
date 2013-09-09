@@ -312,7 +312,8 @@ def checkout_steps(request):
     CHECKOUT_STEP_FIRST = step == checkout.CHECKOUT_STEP_FIRST
     context = {"form": form, "CHECKOUT_STEP_FIRST": CHECKOUT_STEP_FIRST,
                "step_title": step_vars["title"], "step_url": step_vars["url"],
-               "steps": checkout.CHECKOUT_STEPS, "step": step}
+               "steps": checkout.CHECKOUT_STEPS, "step": step,
+               "hide_shipping": settings.SHOP_ALWAYS_SAME_BILLING_SHIPPING}
     if settings.SHOP_TOS_ON_CHECKOUT and step == len(checkout.CHECKOUT_STEPS):
         context['tos_url'] = settings.SHOP_TOS_URL
     else:

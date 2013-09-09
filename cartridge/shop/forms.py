@@ -390,6 +390,11 @@ class OrderForm(FormsetForm, DiscountForm):
         for field in filter(hidden_filter, self.fields):
             self.fields[field].widget = forms.HiddenInput()
             self.fields[field].required = False
+        if settings.SHOP_ALWAYS_SAME_BILLING_SHIPPING:
+            for field in self.fields:
+                if field == 'same_billing_shipping' or field.startswith('shipping_'):
+                    self.fields[field].widget = forms.HiddenInput()
+                    self.fields[field].required = False
 
         # Set year choices for cc expiry, relative to the current year.
         year = now().year

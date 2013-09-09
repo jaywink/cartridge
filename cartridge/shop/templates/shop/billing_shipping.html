@@ -32,7 +32,9 @@ If you have an existing account or would like to create one, please
 </fieldset>
 
 <fieldset>
-	<legend>{% trans "Delivery Details" %}</legend>
+    {% if not hide_shipping %}
+	   <legend>{% trans "Delivery Details" %}</legend>
+    {% endif %}
 	{% fields_for form.same_billing_shipping_field %}
 	<div id="shipping_fields">{% fields_for form.shipping_detail_fields %}</div>
 	{% fields_for form.additional_instructions_field %}

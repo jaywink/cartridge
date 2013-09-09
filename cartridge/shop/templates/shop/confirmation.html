@@ -16,9 +16,11 @@
 <fieldset class="confirmation">
 	<legend>{% trans "Shipping Details" %}</legend>
 	<ul class="unstyled">
+        {% if not hide_shipping %}
 	    {% for field, value in form.shipping_detail_fields.values %}
         <li><label>{{ field }}:</label> {{ value }}</li>
 	    {% endfor %}
+        {% endif %}
 	    {% for field, value in form.additional_instructions_field.values %}
         <li><label>{{ field }}:</label> {{ value }}</li>
 	    {% endfor %}

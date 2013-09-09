@@ -334,3 +334,10 @@ register_setting(
     default="",
 )
 
+register_setting(
+    name="SHOP_ALWAYS_SAME_BILLING_SHIPPING",
+    label=_("Always same billing and shipping values."),
+    description="Do not query user for shipping values, always use billing values",
+    editable=False,
+    default=False,
+)
