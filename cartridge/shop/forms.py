@@ -440,7 +440,7 @@ class OrderForm(FormsetForm, DiscountForm):
         # Validate necessary fields are filled since hideable fields are
         # blank=True in the Order model
         for field in self.fields:
-            if (field.startswith("billing_detail") or field.startswith("shipping_detail")) and len(self.data[field]) == 0 and field.replace("billing_detail_", "").replace("shipping_detail_", "") not in settings.SHOP_HIDE_BILLING_SHIPPING_FIELDS:
+            if (field.startswith("billing_detail") or (field.startswith("shipping_detail") and not settings.SHOP_ALWAYS_SAME_BILLING_SHIPPING)) and len(self.data[field]) == 0 and field.replace("billing_detail_", "").replace("shipping_detail_", "") not in settings.SHOP_HIDE_BILLING_SHIPPING_FIELDS:
                 self.errors[field] = [_("This field is required.")]
                 raise forms.ValidationError(_("Please fill out all fields."))
         return self.cleaned_data
