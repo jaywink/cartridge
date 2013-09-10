@@ -99,7 +99,7 @@ def product(request, slug, template="shop/product.html"):
     templates = [u"shop/%s.html" % unicode(product.slug), template]
     # Check for a template matching the page's content model.
     if product.content_model is not None:
-        templates.append(u"shop/products/%s.html" % product.content_model)
+        templates.insert(0, u"shop/products/%s.html" % product.content_model)
     templates.append(template)
     return render(request, templates, context)
 
