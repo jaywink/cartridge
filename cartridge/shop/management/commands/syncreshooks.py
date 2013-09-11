@@ -8,6 +8,6 @@ class Command(BaseCommand):
     help = 'Sync reservations from external hook'
 
     def handle(self, *args, **options):
-        p = ReservableProduct.objects.all()[0]
-        p.update_from_hook()
+        for p in ReservableProduct.objects.all():
+            p.update_from_hook()
 
