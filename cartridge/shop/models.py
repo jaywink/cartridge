@@ -248,7 +248,6 @@ class ReservableProduct(Product):
             if not reservation.date.month in output[reservation.date.year].keys():
                 output[reservation.date.year][reservation.date.month] = []
             output[reservation.date.year][reservation.date.month].append(reservation.date.day);
-        print "reservations_to_js",output
         return json.dumps(output)
     
     def is_available(self, from_date, to_date):
@@ -653,7 +652,8 @@ class Order(models.Model):
                         if reservation:
                             reservation_order = ReservableProductOrderReservation(order=self, reservation=reservation)
                             reservation_order.save()
-                variation.update_stock(item.quantity * -1)
+                else:
+                    variation.update_stock(item.quantity * -1)
                 variation.product.actions.purchased()
         # create reservations in external hook for reservable products (if any)
         if self.has_reservables:
@@ -665,9 +665,7 @@ class Order(models.Model):
                 else:
                     if variation.product.content_model == 'reservableproduct':
                         # create reservation via hook (if any)
-                        print "** trying to reserve via hook:", item.from_date, item.to_date, self.id
                         external_order_id = reservableproduct.reserve_via_hook(item.from_date, item.to_date, self.id)
-                        print "** external_order_id", external_order_id
                         if external_order_id == -1 or not external_order_id:
                             # External hook reported an error
                             # TODO: send extra notice to shop admins to process this manually
