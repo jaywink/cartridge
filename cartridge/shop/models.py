@@ -836,7 +836,6 @@ class Cart(models.Model):
                     reserved_days = ReservableProductCartReservation.objects.filter(cart=self)
                     for reservation in reserved_days:
                         print reservation.reservation.product,variation.product
-                        #print reservation.reservation.date
                         reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
                         if reservableproduct == reservation.reservation.product:
                             print reservation.reservation.date

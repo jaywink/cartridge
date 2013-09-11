@@ -75,10 +75,7 @@ def product(request, slug, template="shop/product.html"):
                 set_cookie(response, "wishlist", ",".join(skus))
                 return response
     if product.content_model == 'reservableproduct':
-        # update reservations
         reservable = ReservableProduct.objects.get(id=product.id)
-        #reservable.reservations.all().delete()
-        #reservable.update_from_hook()
         reservations = reservable.reservations.all()
     else:
         reservations = None
