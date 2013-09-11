@@ -249,19 +249,47 @@ class ReservableProduct(Product):
                 output[reservation.date.year][reservation.date.month] = []
             output[reservation.date.year][reservation.date.month].append(reservation.date.day);
         return json.dumps(output)
+        
+    def availabilities_to_json(self):
+        output = []
+        for availability in self.availabilities.all():
+            output.append(
+                { 'from_date': [availability.from_date.year, availability.from_date.month, availability.from_date.day],
+                  'to_date': [availability.to_date.year, availability.to_date.month, availability.to_date.day]
+                }
+            )
+        return json.dumps(output)
     
     def is_available(self, from_date, to_date):
         """
-        Check reservations to see if available
+        Check reservations and availabilities to see if available
         """
         to_date += datetime.timedelta(days=-1)
         reservations = self.reservations.filter(date__range=(from_date, to_date))
         if len(reservations) > 0:
             return False
-        else:
-            return True
+        availabilities = self.availabilities.all()
+        for availability in availabilities:
+            if not availability.from_date <= from_date <= availability.to_date or not availability.from_date <= to_date <= availability.to_date:
+                return False
+        return True
         
-        
+
+class ReservableProductAvailability(models.Model):
+    """
+    Reservable product availability.
+    If not defined, product is available always. Define
+    one or more periods here to restrict availability.
+    """
+    
+    from_date = models.DateField(_("From date"))
+    to_date = models.DateField(_("To date"))
+    product = models.ForeignKey("ReservableProduct", related_name="availabilities")
+    
+    def __unicode__(self):
+        return str(self.from_date) + "-" + str(self.to_date)
+     
+
 class ReservableProductReservation(models.Model):
     """
     Reservation

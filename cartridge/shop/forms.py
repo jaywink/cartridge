@@ -566,3 +566,10 @@ class SpecialPriceAdminForm(forms.ModelForm):
     def clean(self):
         return self.cleaned_data
         
+        
+class ReservableProductAvailabilityAdminForm(forms.ModelForm):
+    """
+    Reservable product availabilities admin form.
+    """
+    def clean(self):
+        return self.cleaned_data
