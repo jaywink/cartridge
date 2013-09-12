@@ -7,14 +7,16 @@ function isAvailable(date) {
     } else {
         curDate.setDate(date.getDate());
     }
-    var available = false;
-    for (var i=0; i<avails.length; i++) {
-        if (curDate <= avails[i].to_date && curDate >= avails[i].from_date) {
-            available = true;
+    if (avails.length) {
+        var available = false;
+        for (var i=0; i<avails.length; i++) {
+            if (curDate <= avails[i].to_date && curDate >= avails[i].from_date) {
+                available = true;
+            }
         }
-    }
-    if (available == false) {
-        return [false, "not available"];
+        if (available == false) {
+            return [false, "not available"];
+        }
     }
     if (typeof reservedDays[curDate.getFullYear()] !== 'undefined' &&
             typeof reservedDays[curDate.getFullYear()][curDate.getMonth()+1] !== 'undefined' ){
