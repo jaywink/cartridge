@@ -268,10 +268,10 @@ class ReservableProduct(Product):
         reservations = self.reservations.filter(date__range=(from_date, to_date))
         if len(reservations) > 0:
             return False
-        availabilities = self.availabilities.all()
-        for availability in availabilities:
-            if not availability.from_date <= from_date <= availability.to_date or not availability.from_date <= to_date <= availability.to_date:
-                return False
+        # availabilities = self.availabilities.all()
+        # for availability in availabilities:
+        #     if not availability.from_date <= from_date <= availability.to_date or not availability.from_date <= to_date <= availability.to_date:
+        #         return False
         return True
         
 
