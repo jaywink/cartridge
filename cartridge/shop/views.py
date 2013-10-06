@@ -18,9 +18,10 @@ from mezzanine.utils.views import render, set_cookie, paginate
 
 from cartridge.shop import checkout
 from cartridge.shop.forms import AddProductForm, DiscountForm, CartItemFormSet
-from cartridge.shop.models import Product, ReservableProduct, ProductVariation, Order, OrderItem
+from cartridge.shop.models import Product, ProductVariation, Order, OrderItem
+from cartridge.shop.models import ReservableProduct
 from cartridge.shop.models import DiscountCode
-from cartridge.shop.utils import recalculate_discount, sign
+from cartridge.shop.utils import recalculate_cart, sign
 
 
 # Set up checkout handlers.
@@ -62,7 +63,7 @@ def product(request, slug, template="shop/product.html"):
                     from_date = None
                     to_date = None
                 request.cart.add_item(add_product_form.variation, quantity, from_date, to_date)
-                recalculate_discount(request)
+                recalculate_cart(request)
                 info(request, _("Item added to cart"))
                 return redirect("shop_cart")
             else:
@@ -120,7 +121,7 @@ def wishlist(request, template="shop/wishlist.html"):
         if to_cart:
             if add_product_form.is_valid():
                 request.cart.add_item(add_product_form.variation, 1)
-                recalculate_discount(request)
+                recalculate_cart(request)
                 message = _("Item added to cart")
                 url = "shop_cart"
             else:
@@ -170,7 +171,7 @@ def cart(request, template="shop/cart.html"):
                 valid = cart_formset.is_valid()
                 if valid:
                     cart_formset.save()
-                    recalculate_discount(request)
+                    recalculate_cart(request)
                     info(request, _("Cart updated"))
                 else:
                     # Reset the cart formset so that the cart
