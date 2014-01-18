@@ -18,7 +18,7 @@ from mezzanine.utils.views import render, set_cookie, paginate
 
 from cartridge.shop import checkout
 from cartridge.shop.forms import AddProductForm, DiscountForm, CartItemFormSet
-from cartridge.shop.models import Product, ProductVariation, Order, OrderItem
+from cartridge.shop.models import Product, ReservableProduct, ProductVariation, Order, OrderItem
 from cartridge.shop.models import DiscountCode
 from cartridge.shop.utils import recalculate_cart, sign
 
@@ -55,7 +55,13 @@ def product(request, slug, template="shop/product.html"):
         if add_product_form.is_valid():
             if to_cart:
                 quantity = add_product_form.cleaned_data["quantity"]
-                request.cart.add_item(add_product_form.variation, quantity)
+                if product.content_model == 'reservableproduct':
+                    from_date = add_product_form.cleaned_data["from_date"]
+                    to_date = add_product_form.cleaned_data["to_date"]
+                else:
+                    from_date = None
+                    to_date = None
+                request.cart.add_item(add_product_form.variation, quantity, from_date, to_date)
                 recalculate_cart(request)
                 info(request, _("Item added to cart"))
                 return redirect("shop_cart")
@@ -68,6 +74,15 @@ def product(request, slug, template="shop/product.html"):
                 response = redirect("shop_wishlist")
                 set_cookie(response, "wishlist", ",".join(skus))
                 return response
+    if product.content_model == 'reservableproduct':
+        # update reservations
+        reservable = ReservableProduct.objects.get(id=product.id)
+        #reservable.reservations.all().delete()
+        #reservable.update_from_hook()
+        reservations = reservable.reservations.all()
+    else:
+        reservations = None
+        reservable = None
     context = {
         "product": product,
         "editable_obj": product,
@@ -77,7 +92,9 @@ def product(request, slug, template="shop/product.html"):
         "has_available_variations": any([v.has_price() for v in variations]),
         "related_products": product.related_products.published(
                                                       for_user=request.user),
-        "add_product_form": add_product_form
+        "add_product_form": add_product_form,
+        "reservations": reservations,
+        "reservable": reservable
     }
     templates = [u"shop/%s.html" % unicode(product.slug), template]
     return render(request, templates, context)
@@ -336,6 +353,10 @@ def invoice(request, order_id, template="shop/order_invoice.html"):
         lookup["user_id"] = request.user.id
     order = get_object_or_404(Order, **lookup)
     context = {"order": order}
+    if order.has_reservables:
+        context["has_reservables"] = True
+    else:
+        context["has_reservables"] = False
     context.update(order.details_as_dict())
     context = RequestContext(request, context)
     if request.GET.get("format") == "pdf":

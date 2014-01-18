@@ -1,5 +1,7 @@
 from decimal import Decimal
 from operator import iand, ior
+import datetime
+import json
 
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -20,6 +22,7 @@ from mezzanine.pages.models import Page
 from mezzanine.utils.models import AdminThumbMixin, upload_to
 
 from cartridge.shop import fields, managers
+import cartridge.shop.utils as utils
 
 try:
     from _mysql_exceptions import OperationalError
@@ -87,11 +90,33 @@ class Priced(models.Model):
         obj_to.save()
 
 
+class SpecialPrice(models.Model):
+    """
+    Special prices for products. Either periods or type based.
+    """
+    
+    SPECIAL_TYPES = (
+        ('PER', 'Period of days'),      # NOT IMPLEMENTED YET
+        ('WKD', 'Weekend (Friday-Saturday)'),
+    )
+    
+    #TODO: add title field
+    price_change = fields.MoneyField(_("Price change"))
+    special_type = models.CharField(max_length=3, choices=SPECIAL_TYPES)
+    product = models.ForeignKey("Product", related_name="specialprices")
+    
+    class Meta:
+        verbose_name = _("Special Price")
+        verbose_name_plural = _("Special Prices")
+
+
 class Product(Displayable, Priced, RichText, AdminThumbMixin):
     """
     Container model for a product that stores information common to
     all of its variations such as the product's title and description.
     """
+
+    content_model = models.CharField(editable=False, max_length=50, null=True)
 
     available = models.BooleanField(_("Available for purchase"),
                                     default=False)
@@ -114,6 +139,23 @@ class Product(Displayable, Priced, RichText, AdminThumbMixin):
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
 
+    @classmethod
+    def get_content_models(cls):
+        """
+        Return all ``Product`` subclasses.
+        """
+        is_product_subclass = lambda cls: issubclass(cls, Product)
+        cmp = lambda a, b: (int(b is Product) - int(a is Product) or
+                            a._meta.verbose_name < b._meta.verbose_name)
+        return sorted(filter(is_product_subclass, models.get_models()), cmp)
+
+    def get_content_model(self):
+        """
+        Provides a generic method of retrieving the instance of the custom
+        product's model, if there is one.
+        """
+        return getattr(self, self.content_model, None)
+
     def save(self, *args, **kwargs):
         """
         Copies the price fields to the default variation when
@@ -125,6 +167,8 @@ class Product(Displayable, Priced, RichText, AdminThumbMixin):
         if updating and not settings.SHOP_USE_VARIATIONS:
             default = self.variations.get(default=True)
             self.copy_price_fields_to(default)
+        else:
+            self.content_model = self._meta.object_name.lower()
 
     @models.permalink
     def get_absolute_url(self):
@@ -140,6 +184,104 @@ class Product(Displayable, Priced, RichText, AdminThumbMixin):
         if default.image:
             self.image = default.image.file.name
         self.save()
+
+class ReservableProduct(Product):
+    """
+    Subclassed product for reservable types.
+    """
+    
+    class Meta:
+        verbose_name = _("Reservable Product")
+        verbose_name_plural = _("Reservable Products")
+    
+    hook_module = "reservation.reservation"
+    
+    def update_from_hook(self):
+        """
+        Update reservations from hook
+        """
+        hook = __import__(self.hook_module)
+        manage = hook.reservation.Manage()
+        today = datetime.date.today()
+        month = today.month
+        year = today.year
+        days = manage.list_reserved_dates(month, year)
+        # clear old reservations from hook
+        # we can tell those because they have no cart or order link
+        reservations = self.reservations.filter(date__gte=today)
+        for reservation in reservations:
+            if len(reservation.in_orders.all()) == 0 and len(reservation.in_carts.all()) == 0:
+                reservation.delete()
+        for year, months in days.items():
+            for month, days in months.items():
+                for day in days:
+                    if datetime.date(year, month, day) >= today:
+                        reservation = ReservableProductReservation(date=datetime.date(year, month, day), product=self)
+                        reservation.save()
+                        
+    def reserve_via_hook(self, from_date, to_date, infotext):
+        """
+        Create reservation via hook in external system.
+        Should return either reservation number in external system
+        or -1 for error.
+        """
+        hook = __import__(self.hook_module)
+        manage = hook.reservation.Manage()
+        return manage.reserve(from_date.strftime('%d.%m.%Y'), to_date.strftime('%d.%m.%Y'), str(infotext))
+                    
+    def reservations_to_json(self):
+        output = {}
+        for reservation in self.reservations.all():
+            if not reservation.date.year in output.keys():
+                output[reservation.date.year] = {}
+            if not reservation.date.month in output[reservation.date.year].keys():
+                output[reservation.date.year][reservation.date.month] = []
+            output[reservation.date.year][reservation.date.month].append(reservation.date.day);
+        print "reservations_to_js",output
+        return json.dumps(output)
+    
+    def is_available(self, from_date, to_date):
+        """
+        Check reservations to see if available
+        """
+        to_date += datetime.timedelta(days=-1)
+        reservations = self.reservations.filter(date__range=(from_date, to_date))
+        if len(reservations) > 0:
+            return False
+        else:
+            return True
+        
+        
+class ReservableProductReservation(models.Model):
+    """
+    Reservation
+    """
+    
+    date = models.DateField(_("Date"))
+    product = models.ForeignKey("ReservableProduct", related_name="reservations")
+    
+    def __unicode__(self):
+        return str(self.date)
+        
+
+class ReservableProductCartReservation(models.Model):
+    """
+    Reservation in cart
+    """
+    
+    cart = models.ForeignKey("Cart", related_name="reservations")
+    reservation = models.ForeignKey("ReservableProductReservation", related_name="in_carts")
+    last_updated = models.DateTimeField(_("Last updated"), auto_now=True)
+    
+
+class ReservableProductOrderReservation(models.Model):
+    """
+    Reservation in order
+    """
+    
+    order = models.ForeignKey("Order", related_name="reservations")
+    reservation = models.ForeignKey("ReservableProductReservation", related_name="in_orders")
+    last_updated = models.DateTimeField(_("Last updated"), auto_now=True)
 
 
 class ProductImage(Orderable):
@@ -489,8 +631,35 @@ class Order(models.Model):
             except ProductVariation.DoesNotExist:
                 pass
             else:
+                if variation.product.content_model == 'reservableproduct':
+                    reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
+                    # we also create a reservable order reservation
+                    for date in utils.daterange(item.from_date, item.to_date):
+                        reservation = ReservableProductReservation.objects.get(date=date, product=reservableproduct)
+                        if reservation:
+                            reservation_order = ReservableProductOrderReservation(order=self, reservation=reservation)
+                            reservation_order.save()
                 variation.update_stock(item.quantity * -1)
                 variation.product.actions.purchased()
+        # create reservations in external hook for reservable products (if any)
+        if self.has_reservables:
+            for item in self.items.all():
+                try:
+                    variation = ProductVariation.objects.get(sku=item.sku)
+                except ProductVariation.DoesNotExist:
+                    pass
+                else:
+                    if variation.product.content_model == 'reservableproduct':
+                        # create reservation via hook (if any)
+                        print "** trying to reserve via hook:", item.from_date, item.to_date, self.id
+                        external_order_id = reservableproduct.reserve_via_hook(item.from_date, item.to_date, self.id)
+                        print "** external_order_id", external_order_id
+                        if external_order_id == -1 or not external_order_id:
+                            # External hook reported an error
+                            # TODO: send extra notice to shop admins to process this manually
+                            pass
+                        item.external_order_id = external_order_id
+                        item.save()
         if discount_code:
             DiscountCode.objects.active().filter(code=discount_code).update(
                 uses_remaining=F('uses_remaining') - 1)
@@ -520,6 +689,12 @@ class Order(models.Model):
         return "<a href='%s?format=pdf'>%s</a>" % (url, text)
     invoice.allow_tags = True
     invoice.short_description = ""
+    
+    def has_reservables(self):
+        for item in self.items.all():
+            if item.from_date and item.to_date:
+                return True
+        return False
 
 
 class Cart(models.Model):
@@ -537,13 +712,19 @@ class Cart(models.Model):
             self._cached_items = self.items.all()
         return iter(self._cached_items)
 
-    def add_item(self, variation, quantity):
+    def add_item(self, variation, quantity, from_date=None, to_date=None):
         """
         Increase quantity of existing item if SKU matches, otherwise create
         new.
         """
         kwargs = {"sku": variation.sku, "unit_price": variation.price()}
-        item, created = self.items.get_or_create(**kwargs)
+        if variation.product.content_model == 'reservableproduct':
+            # create always
+            kwargs["cart"] = self
+            item = CartItem(**kwargs)
+            created = True
+        else:
+            item, created = self.items.get_or_create(**kwargs)
         if created:
             item.description = unicode(variation)
             item.unit_price = variation.price()
@@ -553,7 +734,17 @@ class Cart(models.Model):
                 item.image = unicode(image.file)
             variation.product.actions.added_to_cart()
         item.quantity += quantity
+        item.from_date = from_date
+        item.to_date = to_date
         item.save()
+        if variation.product.content_model == 'reservableproduct':
+            # we also create a reservable cart reservation
+            for date in utils.daterange(from_date, to_date):
+                reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
+                reservation = ReservableProductReservation(date=date, product=reservableproduct)
+                reservation.save()
+                reservation_cart = ReservableProductCartReservation(cart=self, reservation=reservation)
+                reservation_cart.save()
 
     def has_items(self):
         """
@@ -571,7 +762,10 @@ class Cart(models.Model):
         """
         Template helper function - sum of all costs of item quantities.
         """
-        return sum([item.total_price for item in self])
+        total = sum([item.total_price for item in self])
+        for special in self.special_prices():
+            total += special[2]
+        return total
 
     def skus(self):
         """
@@ -609,6 +803,45 @@ class Cart(models.Model):
             if item.sku in discount_skus:
                 total += discount.calculate(item.unit_price) * item.quantity
         return total
+        
+    def special_prices(self):
+        """
+        Get all the special prices that affect this cart.
+        """
+        result = []
+        items_done = []
+        for item in self:
+            variation = ProductVariation.objects.get(sku=item.sku)
+            specials = SpecialPrice.objects.filter(product=variation.product)
+            if variation.product.content_model == 'reservableproduct' and item in items_done:
+                # only do each item once for reservables
+                continue
+            for special in specials:
+                # for reservables we check against days in reserved period
+                # for other products we check against purchasing date
+                if variation.product.content_model == 'reservableproduct':
+                    reserved_days = ReservableProductCartReservation.objects.filter(cart=self)
+                    for reservation in reserved_days:
+                        print reservation.reservation.product,variation.product
+                        #print reservation.reservation.date
+                        reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
+                        if reservableproduct == reservation.reservation.product:
+                            print reservation.reservation.date
+                            if special.special_type == 'WKD' and reservation.reservation.date.isoweekday() in [5,6]:
+                                # reservation occurs on a weekend date
+                                result.append((variation.product.title, 'WKD', special.price_change))
+                else:
+                    if special.special_type == 'WKD' and date.today().isoweekday() in [5,6]:
+                        # now occurs on a weekend date
+                        result.append((variation.product.title, 'WKD', special.price_change))
+            items_done.append(item)
+        return result
+    
+    def has_reservables(self):
+        for item in self:
+            if item.from_date and item.to_date:
+                return True
+        return False
 
 
 class SelectedProduct(models.Model):
@@ -621,12 +854,22 @@ class SelectedProduct(models.Model):
     quantity = models.IntegerField(_("Quantity"), default=0)
     unit_price = fields.MoneyField(_("Unit price"), default=Decimal("0"))
     total_price = fields.MoneyField(_("Total price"), default=Decimal("0"))
+    
+    # for reservable products
+    from_date = models.DateField(_("From date"), null=True)
+    to_date = models.DateField(_("To date"), null=True)
 
     class Meta:
         abstract = True
 
     def __unicode__(self):
         return ""
+        
+    def is_reserved(self):
+        if from_day and to_day:
+            return True
+        else:
+            return False
 
     def save(self, *args, **kwargs):
         """
@@ -649,6 +892,22 @@ class CartItem(SelectedProduct):
 
     def get_absolute_url(self):
         return self.url
+        
+    def delete(self, *args, **kwargs):
+        """
+        Overriden default delete method to cover reservables
+        """
+        variation = ProductVariation.objects.get(sku=self.sku)
+        if variation.product.content_model == 'reservableproduct':
+            cart_reservations = ReservableProductCartReservation.objects.filter(cart=self.cart)
+            for cart_reservation in cart_reservations:
+                # delete reservation if not moved to an order
+                try:
+                    order_reservation = ReservableProductOrderReservation.objects.get(reservation=cart_reservation.reservation)
+                except:
+                    cart_reservation.reservation.delete()
+                cart_reservation.delete()
+        super(CartItem, self).delete(*args, **kwargs)
 
 
 class OrderItem(SelectedProduct):
@@ -656,6 +915,11 @@ class OrderItem(SelectedProduct):
     A selected product in a completed order.
     """
     order = models.ForeignKey("Order", related_name="items")
+    
+    # External order ID - if order is saved via external hook, 
+    # for example a reservation
+    external_order_id = models.IntegerField(_("External Order ID"), 
+        null=True, blank=True)
 
 
 class ProductAction(models.Model):

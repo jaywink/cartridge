@@ -24,6 +24,11 @@ class CartManager(Manager):
                 cart = self.current().get(id=cart_id)
             except self.model.DoesNotExist:
                 request.session["cart"] = None
+                old_carts = self.filter(last_updated__lt=expiry_time)
+                for old_cart in old_carts:
+                    for item in old_cart.items.all():
+                        item.delete()
+                    old_cart.delete()
             else:
                 # Update timestamp and clear out old carts.
                 cart.last_updated = now()

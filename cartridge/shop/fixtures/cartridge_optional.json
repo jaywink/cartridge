@@ -77,6 +77,41 @@
         }
     },
     {
+        "pk": 2,
+        "model": "shop.product",
+        "fields": {
+            "status": 2,
+            "available": true,
+            "description": "<p>Järvenrantamökki Rokuan kankaalla!</p>",
+            "title": "Kakaravaara",
+            "unit_price": "70",
+            "content_model": "reservableproduct",
+            "sku": "13",
+            "content": "<p>Järvenrantamökki Rokuan kankaalla!</p>",
+            "slug": "kakaravaara",
+            "categories": [
+                7
+            ],
+            "site": 1
+        }
+    },
+    {
+        "pk": 1,
+        "model": "shop.reservableproduct",
+        "fields": {
+            "product_ptr": 2
+        }
+    },
+    {
+        "pk": 1,
+        "model": "shop.specialprice",
+        "fields": {
+            "price_change": 20.00,
+            "special_type": "WKD",
+            "product": 2
+        }
+    },
+    {
         "pk": 1,
         "model": "shop.productimage",
         "fields": {

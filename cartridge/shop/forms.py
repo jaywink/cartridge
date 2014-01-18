@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 
 from copy import copy
 from datetime import date
+import datetime
 from itertools import dropwhile, takewhile
 from locale import localeconv
 from re import match
@@ -17,8 +19,8 @@ from mezzanine.conf import settings
 from mezzanine.core.templatetags.mezzanine_tags import thumbnail
 
 from cartridge.shop import checkout
-from cartridge.shop.models import Product, ProductOption, ProductVariation
-from cartridge.shop.models import Cart, CartItem, Order, DiscountCode
+from cartridge.shop.models import Product, ReservableProduct, ProductOption, ProductVariation
+from cartridge.shop.models import Cart, CartItem, Order, DiscountCode, SpecialPrice
 from cartridge.shop.utils import make_choices, set_locale, set_shipping
 
 
@@ -26,6 +28,8 @@ ADD_PRODUCT_ERRORS = {
     "invalid_options": _("The selected options are currently unavailable."),
     "no_stock": _("The selected options are currently not in stock."),
     "no_stock_quantity": _("The selected quantity is currently unavailable."),
+    "period_not_available": _("The whole period is not available."),
+    "cannot_edit_reservable_quantity": _("Cannot edit quantity of reservable product."),
 }
 
 
@@ -80,6 +84,11 @@ class AddProductForm(forms.Form):
                     field = forms.ChoiceField(label=option_labels[i],
                                               choices=make_choices(values))
                     self.fields[name] = field
+        if self._product.content_model == 'reservableproduct':
+            # ReservableProduct needs from/to dates and does not need quantity
+            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label="Tulopäivä")
+            self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label="Lähtöpäivä")
+            self.fields["quantity"] = forms.IntegerField(min_value=1, initial=1, widget=forms.HiddenInput())
 
     def clean(self):
         """
@@ -92,6 +101,11 @@ class AddProductForm(forms.Form):
         # a variation.
         data = self.cleaned_data.copy()
         quantity = data.pop("quantity")
+        try:
+            from_date = data.pop("from_date")
+            to_date = data.pop("to_date")
+        except:
+            pass
         # Ensure the product has a price if adding to cart.
         if self._to_cart:
             data["unit_price__isnull"] = False
@@ -108,12 +122,21 @@ class AddProductForm(forms.Form):
         except ProductVariation.DoesNotExist:
             error = "invalid_options"
         else:
-            # Validate stock if adding to cart.
             if self._to_cart:
-                if not variation.has_stock():
-                    error = "no_stock"
-                elif not variation.has_stock(quantity):
-                    error = "no_stock_quantity"
+                if self._product.content_model == 'reservableproduct':
+                    # check if available to reserve
+                    reservableproduct = ReservableProduct.objects.get(pk=self._product.id)
+                    if not reservableproduct.is_available(from_date, to_date):
+                        error = "period_not_available"
+                    else:
+                        # fix quantity
+                        self.cleaned_data["quantity"] = (to_date - from_date).days
+                else:
+                    # Validate stock if adding to cart.
+                    if not variation.has_stock():
+                        error = "no_stock"
+                    elif not variation.has_stock(quantity):
+                        error = "no_stock_quantity"
         if error is not None:
             raise forms.ValidationError(ADD_PRODUCT_ERRORS[error])
         self.variation = variation
@@ -135,6 +158,10 @@ class CartItemForm(forms.ModelForm):
         Validate that the given quantity is available.
         """
         variation = ProductVariation.objects.get(sku=self.instance.sku)
+        if variation.product.content_model == 'reservableproduct':
+            # not allowed to edit quantity of reservable
+            error = ADD_PRODUCT_ERRORS["cannot_edit_reservable_quantity"]
+            raise forms.ValidationError(error)
         quantity = self.cleaned_data["quantity"]
         if not variation.has_stock(quantity - self.instance.quantity):
             error = ADD_PRODUCT_ERRORS["no_stock_quantity"].rstrip(".")
@@ -326,6 +353,11 @@ class OrderForm(FormsetForm, DiscountForm):
         # which is an immutable QueryDict. We want to modify it, so we
         # need to make a copy.
         data = copy(data)
+
+        for field in data:
+            billing = field.replace("shipping_detail", "billing_detail")
+            if "shipping_detail" in field and billing in data:
+                data[field] = data[billing]
 
         # Force the specified step in the posted data, which is
         # required to allow moving backwards in steps. Also handle any
@@ -528,3 +560,12 @@ class DiscountAdminForm(forms.ModelForm):
             error = _("Please enter a value for only one type of reduction.")
             self._errors[fields[0]] = self.error_class([error])
         return self.cleaned_data
+
+
+class SpecialPriceAdminForm(forms.ModelForm):
+    """
+    Special price checks for admin form.
+    """
+    def clean(self):
+        return self.cleaned_data
+        

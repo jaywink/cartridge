@@ -28,6 +28,10 @@
 		<th colspan="2" class="left">{% trans "Item" %}</th>
 		<th>{% trans "Unit Price" %}</th>
 		<th class="center">{% trans "Qty" %}</th>
+        {% if request.cart.has_reservables %}
+            <th class="center">{% trans "From date" %}</th>
+            <th class="center">{% trans "To date" %}</th>    
+        {% endif %}
 		<th>{% trans "Price" %}</th>
 		<th class="center">{% trans "Remove?" %}</th>
 	</tr>
@@ -47,11 +51,31 @@
         </td>
 		<td>{{ item.unit_price|currency }}</td>
 		<td class="quantity">{{ form.quantity }}</td>
+        {% if request.cart.has_reservables %}
+            <td class="center">{{ item.from_date|default_if_none:"-" }}</td>
+            <td class="center">{{ item.to_date|default_if_none:"-" }}</td>
+        {% endif %}
 		<td>{{ item.total_price|currency }}</td>
 		<td class="center">{{ form.DELETE }}</td>
 	</tr>
 	{% endwith %}
 	{% endfor %}
+    {% if request.cart.special_prices %}
+        <tr>
+            <th colspan="4" class="left">Specials</th>
+            <th colspan="3" class="left">Product</th>
+            <th class="center">Price adj</th>
+        </tr>
+        {% for special in request.cart.special_prices %}
+            <tr>
+                {% if special.1 == 'WKD' %}
+                    <td colspan="4" class="left">{% trans 'Weekend' %}</td>
+                {% endif %}
+                <td colspan="3" class="left">{{ special.0 }}</td>
+                <td class="center">{{ special.2|currency }}</td>
+            </tr>
+        {% endfor %}
+    {% endif %}
 	<tr>
 		<td colspan="5">{% order_totals %}</td>
 		<td>&nbsp;</td>

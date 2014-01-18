@@ -1,3 +1,4 @@
+from datetime import timedelta
 import hmac
 from locale import setlocale, LC_MONETARY
 try:
@@ -127,3 +128,13 @@ def set_locale():
                 "configure the SHOP_CURRENCY_LOCALE setting in your settings "
                 "module.")
         raise ImproperlyConfigured(msg % currency_locale)
+
+
+def daterange(start_date, end_date):
+    """
+    Handy helper function to iterate over days,
+    from http://stackoverflow.com/a/1060330/1489738
+    """
+    for n in range(int ((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+        

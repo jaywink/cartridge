@@ -30,19 +30,24 @@ from copy import deepcopy
 
 from django.contrib import admin
 from django.db.models import ImageField
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 
 from mezzanine.conf import settings
 from mezzanine.core.admin import DisplayableAdmin, TabularDynamicInlineAdmin
 from mezzanine.pages.admin import PageAdmin
+from mezzanine.utils.urls import admin_url
 
 from cartridge.shop.fields import MoneyField
 from cartridge.shop.forms import ProductAdminForm, ProductVariationAdminForm
 from cartridge.shop.forms import ProductVariationAdminFormset
 from cartridge.shop.forms import DiscountAdminForm, ImageWidget, MoneyWidget
-from cartridge.shop.models import Category, Product, ProductImage
+from cartridge.shop.forms import SpecialPriceAdminForm
+from cartridge.shop.models import Category, Product, ProductImage, ReservableProduct
 from cartridge.shop.models import ProductVariation, ProductOption, Order
 from cartridge.shop.models import OrderItem, Sale, DiscountCode
+from cartridge.shop.models import SpecialPrice
 
 
 # Lists of field names.
@@ -156,12 +161,54 @@ class ProductAdmin(DisplayableAdmin):
     form = ProductAdminForm
     fieldsets = product_fieldsets
 
+    def __init__(self, *args, **kwargs):
+        """
+        For ``Product`` subclasses that are registered with an Admin class
+        that doesn't implement fieldsets, add any extra model fields
+        to this instance's fieldsets. This mimics Django's behaviour of
+        adding all model fields when no fieldsets are defined on the
+        Admin class.
+        """
+
+        super(ProductAdmin, self).__init__(*args, **kwargs)
+
+        # Test that the fieldsets don't differ from ProductAdmin's.
+        if (self.model is not Product and
+                self.fieldsets == ProductAdmin.fieldsets):
+
+            # Make a copy so that we aren't modifying other Admin
+            # classes' fieldsets.
+            self.fieldsets = deepcopy(self.fieldsets)
+
+            # Insert each field between the publishing fields and nav
+            # fields. Do so in reverse order to retain the order of
+            # the model's fields.
+            for field in reversed(self.model._meta.fields):
+                check_fields = [f.name for f in Product._meta.fields]
+                check_fields.append("product_ptr")
+                try:
+                    check_fields.extend(self.exclude)
+                except (AttributeError, TypeError):
+                    pass
+                try:
+                    check_fields.extend(self.form.Meta.exclude)
+                except (AttributeError, TypeError):
+                    pass
+                if field.name not in check_fields and field.editable:
+                    self.fieldsets[0][1]["fields"].insert(3, field.name)
+
     def save_model(self, request, obj, form, change):
         """
         Store the product object for creating variations in save_formset.
         """
         super(ProductAdmin, self).save_model(request, obj, form, change)
         self._product = obj
+
+    def in_menu(self):
+        """
+        Hide subclasses from the admin menu.
+        """
+        return self.model is Product
 
     def save_formset(self, request, form, formset, change):
         """
@@ -228,6 +275,24 @@ class ProductAdmin(DisplayableAdmin):
             # Copy duplicate fields (``Priced`` fields) from the default
             # variation to the product.
             self._product.copy_default_variation()
+
+    def change_view(self, request, object_id, extra_context=None):
+        """
+        As in Mezzanine's ``Page`` model, check ``product.get_content_model()``
+        for a subclass and redirect to its admin change view.
+        """
+        if self.model is Product:
+            product = get_object_or_404(Product, pk=object_id)
+            try:
+                content_model = product.get_content_model()
+            except:
+                content_model = None
+            if content_model is not None:
+                change_url = admin_url(content_model.__class__, "change",
+                                       content_model.id)
+                return HttpResponseRedirect(change_url)
+        return super(ProductAdmin, self).change_view(request, object_id,
+            extra_context=extra_context)
 
 
 class ProductOptionAdmin(admin.ModelAdmin):
@@ -310,10 +375,19 @@ class DiscountCodeAdmin(admin.ModelAdmin):
     )
 
 
+class SpecialPriceAdmin(admin.ModelAdmin):
+    list_display = ("id", "price_change", "special_type", "product")
+    list_editable = ("price_change", "special_type", "product")
+    formfield_overrides = {MoneyField: {"widget": MoneyWidget}}
+    form = SpecialPriceAdminForm
+    
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Product, ProductAdmin)
+admin.site.register(ReservableProduct, ProductAdmin)
 if settings.SHOP_USE_VARIATIONS:
     admin.site.register(ProductOption, ProductOptionAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Sale, SaleAdmin)
 admin.site.register(DiscountCode, DiscountCodeAdmin)
+admin.site.register(SpecialPrice, SpecialPriceAdmin)
