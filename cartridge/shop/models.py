@@ -621,13 +621,10 @@ class Order(models.Model):
         delete the cart.
         """
         self.save()  # Save the transaction ID.
-        for field in self.session_fields:
+        discount_code = request.session.get('discount_code')
+        for field in ("order",) + self.session_fields:
             if field in request.session:
                 del request.session[field]
-        try:
-            del request.session["order"]
-        except KeyError:
-            pass
         for item in request.cart:
             try:
                 variation = ProductVariation.objects.get(sku=item.sku)
@@ -663,9 +660,8 @@ class Order(models.Model):
                             pass
                         item.external_order_id = external_order_id
                         item.save()
-        code = request.session.get('discount_code')
-        if code:
-            DiscountCode.objects.active().filter(code=code).update(
+        if discount_code:
+            DiscountCode.objects.active().filter(code=discount_code).update(
                 uses_remaining=F('uses_remaining') - 1)
         request.cart.delete()
 
