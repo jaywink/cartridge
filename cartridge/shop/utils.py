@@ -1,8 +1,8 @@
-from datetime import timedelta
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from future.builtins import bytes, zip
 
+from datetime import timedelta
 import hmac
 from locale import setlocale, LC_MONETARY
 try:
