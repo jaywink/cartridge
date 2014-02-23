@@ -1,17 +1,28 @@
+
+from __future__ import division, unicode_literals
+from future.builtins import str, super
+from future.utils import with_metaclass
+
 from decimal import Decimal
+from functools import reduce
 from operator import iand, ior
 import datetime
 import json
 
 from django.core.urlresolvers import reverse
-from django.db import models
+from django.db import models, connection
 from django.db.models.signals import m2m_changed
-from django.db.models import CharField, F, Q
+from django.db.models import CharField, Q
 from django.db.models.base import ModelBase
-from django.db.utils import DatabaseError
 from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import ugettext, ugettext_lazy as _
+
+try:
+    from django.utils.encoding import force_text
+except ImportError:
+    # Backward compatibility for Py2 and Django < 1.5
+    from django.utils.encoding import force_unicode as force_text
 
 from mezzanine.conf import settings
 from mezzanine.core.fields import FileField
@@ -23,15 +34,17 @@ from mezzanine.utils.models import AdminThumbMixin, upload_to
 
 from cartridge.shop import fields, managers
 import cartridge.shop.utils as utils
+from cartridge.shop.utils import clear_session
 
-try:
-    from _mysql_exceptions import OperationalError
-except ImportError:
-    class OperationalError(StandardError):
-        """
-        This class is purely to prevent a NameError if
-        _mysql_exceptions.OperationalError is not available.
-        """
+
+class F(models.F):
+    """
+    Django 1.4's F objects don't support true division, which
+    we need for Python 3.x. This should be removed when we
+    drop support for Django 1.4.
+    """
+    def __truediv__(self, other):
+        return self._combine(other, self.DIV, False)
 
 
 class Priced(models.Model):
@@ -345,20 +358,18 @@ class ProductVariationMetaclass(ModelBase):
         return super(ProductVariationMetaclass, cls).__new__(*args)
 
 
-class ProductVariation(Priced):
+class ProductVariation(with_metaclass(ProductVariationMetaclass, Priced)):
     """
     A combination of selected options from
     ``SHOP_OPTION_TYPE_CHOICES`` for a ``Product`` instance.
     """
 
     product = models.ForeignKey("Product", related_name="variations")
-    default = models.BooleanField(_("Default"))
+    default = models.BooleanField(_("Default"), default=False)
     image = models.ForeignKey("ProductImage", verbose_name=_("Image"),
                               null=True, blank=True)
 
     objects = managers.ProductVariationManager()
-
-    __metaclass__ = ProductVariationMetaclass
 
     class Meta:
         ordering = ("-default",)
@@ -371,12 +382,9 @@ class ProductVariation(Priced):
         for field in self.option_fields():
             name = getattr(self, field.name)
             if name is not None:
-                verbose_name = field.verbose_name
-                if isinstance(verbose_name, str):
-                    verbose_name = verbose_name.decode("utf-8")
-                option = u"%s: %s" % (verbose_name, name)
+                option = u"%s: %s" % (field.verbose_name, name)
                 options.append(option)
-        result = u"%s %s" % (unicode(self.product), u", ".join(options))
+        result = u"%s %s" % (str(self.product), u", ".join(options))
         return result.strip()
 
     def save(self, *args, **kwargs):
@@ -604,9 +612,9 @@ class Order(models.Model):
             self.shipping_total = Decimal(str(self.shipping_total))
             self.total += self.shipping_total
         if self.discount_total is not None:
-            self.total -= self.discount_total
+            self.total -= Decimal(self.discount_total)
         if self.tax_total is not None:
-            self.total += self.tax_total
+            self.total += Decimal(self.tax_total)
         self.save()  # We need an ID before we can add related items.
         for item in request.cart:
             product_fields = [f.name for f in SelectedProduct._meta.fields]
@@ -622,9 +630,7 @@ class Order(models.Model):
         """
         self.save()  # Save the transaction ID.
         discount_code = request.session.get('discount_code')
-        for field in ("order",) + self.session_fields:
-            if field in request.session:
-                del request.session[field]
+        clear_session(request, "order", *self.session_fields)
         for item in request.cart:
             try:
                 variation = ProductVariation.objects.get(sku=item.sku)
@@ -662,7 +668,7 @@ class Order(models.Model):
                         item.save()
         if discount_code:
             DiscountCode.objects.active().filter(code=discount_code).update(
-                uses_remaining=F('uses_remaining') - 1)
+                uses_remaining=models.F('uses_remaining') - 1)
         request.cart.delete()
 
     def details_as_dict(self):
@@ -726,12 +732,12 @@ class Cart(models.Model):
         else:
             item, created = self.items.get_or_create(**kwargs)
         if created:
-            item.description = unicode(variation)
+            item.description = force_text(variation)
             item.unit_price = variation.price()
             item.url = variation.product.get_absolute_url()
             image = variation.image
             if image is not None:
-                item.image = unicode(image.file)
+                item.image = force_text(image.file)
             variation.product.actions.added_to_cart()
         item.quantity += quantity
         item.from_date = from_date
@@ -778,6 +784,8 @@ class Cart(models.Model):
         """
         Returns the upsell products for each of the items in the cart.
         """
+        if not settings.SHOP_USE_UPSELL_PRODUCTS:
+            return []
         cart = Product.objects.filter(variations__sku__in=self.skus())
         published_products = Product.objects.published()
         for_cart = published_products.filter(upsell_products__in=cart)
@@ -950,7 +958,7 @@ class Discount(models.Model):
     """
 
     title = CharField(_("Title"), max_length=100)
-    active = models.BooleanField(_("Active"))
+    active = models.BooleanField(_("Active"), default=False)
     products = models.ManyToManyField("Product", blank=True,
                                       verbose_name=_("Products"))
     categories = models.ManyToManyField("Category", blank=True,
@@ -1010,7 +1018,7 @@ class Sale(Discount):
                 sale_price = models.F("unit_price") - self.discount_deduct
             elif self.discount_percent is not None:
                 sale_price = models.F("unit_price") - (
-                    models.F("unit_price") / "100.0" * self.discount_percent)
+                    F("unit_price") / "100.0" * self.discount_percent)
             elif self.discount_exact is not None:
                 # Don't apply to prices that are cheaper than the sale
                 # amount.
@@ -1021,33 +1029,37 @@ class Sale(Discount):
             products = self.all_products()
             variations = ProductVariation.objects.filter(product__in=products)
             for priced_objects in (products, variations):
-                # MySQL will raise a 'Data truncated' warning here in
-                # some scenarios, presumably when doing a calculation
-                # that exceeds the precision of the price column. In
-                # this case it's safe to ignore it and the calculation
-                # will still be applied.
-                try:
-                    update = {"sale_id": self.id,
-                              "sale_price": sale_price,
-                              "sale_to": self.valid_to,
-                              "sale_from": self.valid_from}
+                update = {"sale_id": self.id,
+                          "sale_price": sale_price,
+                          "sale_to": self.valid_to,
+                          "sale_from": self.valid_from}
+                using = priced_objects.db
+                if "mysql" not in settings.DATABASES[using]["ENGINE"]:
                     priced_objects.filter(**extra_filter).update(**update)
-                except (OperationalError, DatabaseError):
+                else:
                     # Work around for MySQL which does not allow update
                     # to operate on subquery where the FROM clause would
-                    # have it operate on the same table.
-                    #
-                    # http://dev.mysql.com/
-                    # doc/refman/5.0/en/subquery-errors.html
+                    # have it operate on the same table, so we update
+                    # each instance individually:
+
+    # http://dev.mysql.com/doc/refman/5.0/en/subquery-errors.html
+
+                    # Also MySQL may raise a 'Data truncated' warning here
+                    # when doing a calculation that exceeds the precision
+                    # of the price column. In this case it's safe to ignore
+                    # it and the calculation will still be applied, but
+                    # we need to massage transaction management in order
+                    # to continue successfully:
+
+    # https://groups.google.com/forum/#!topic/django-developers/ACLQRF-71s8
+
                     for priced in priced_objects.filter(**extra_filter):
-                        for field, value in update.items():
+                        for field, value in list(update.items()):
                             setattr(priced, field, value)
                         try:
                             priced.save()
                         except Warning:
-                            pass
-                except Warning:
-                    pass
+                            connection.set_rollback(False)
 
     def delete(self, *args, **kwargs):
         """
@@ -1085,7 +1097,7 @@ class DiscountCode(Discount):
 
     code = fields.DiscountCodeField(_("Code"), unique=True)
     min_purchase = fields.MoneyField(_("Minimum total purchase"))
-    free_shipping = models.BooleanField(_("Free shipping"))
+    free_shipping = models.BooleanField(_("Free shipping"), default=False)
     uses_remaining = models.IntegerField(_("Uses remaining"), blank=True,
         null=True, help_text=_("If you wish to limit the number of times a "
             "code may be used, set this value. It will be decremented upon "
@@ -1100,7 +1112,7 @@ class DiscountCode(Discount):
         if self.discount_deduct is not None:
             # Don't apply to amounts that would be negative after
             # deduction.
-            if self.discount_deduct < amount:
+            if self.discount_deduct <= amount:
                 return self.discount_deduct
         elif self.discount_percent is not None:
             return amount / Decimal("100") * self.discount_percent

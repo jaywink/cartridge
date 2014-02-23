@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from socket import gethostname
 
@@ -60,7 +61,8 @@ register_setting(
     default=("SHOP_CARD_TYPES", "SHOP_CATEGORY_USE_FEATURED_IMAGE",
              "SHOP_CHECKOUT_STEPS_SPLIT", "SHOP_PAYMENT_STEP_ENABLED",
              "SHOP_PRODUCT_SORT_OPTIONS", "SHOP_USE_RATINGS",
-             "SHOP_USE_WISHLIST"),
+             "SHOP_USE_WISHLIST", "SHOP_USE_RELATED_PRODUCTS",
+             "SHOP_USE_UPSELL_PRODUCTS"),
     append=True,
 )
 
@@ -98,13 +100,6 @@ register_setting(
         "process."),
     editable=True,
     default=False,
-)
-
-register_setting(
-    name="SHOP_CHECKOUT_FORM_CLASS",
-    description="Dotted path to the Form class to be used at checkout.",
-    editable=False,
-    default="cartridge.shop.forms.OrderForm",
 )
 
 register_setting(
@@ -222,6 +217,16 @@ register_setting(
 )
 
 register_setting(
+    name="SHOP_OPTION_ADMIN_ORDER",
+    description="Sequence of indexes from the ``SHOP_OPTION_TYPE_CHOICES`` "
+        "setting that control how the options should be ordered in the "
+        "admin, eg given the default for ``SHOP_OPTION_ADMIN_ORDER``, to "
+        "order by Colour then Size we'd use (2, 1)",
+    editable=False,
+    default=(),
+)
+
+register_setting(
     name="SHOP_ORDER_EMAIL_SUBJECT",
     label=_("Order Email Subject"),
     description=_("Subject to be used when sending the order receipt email."),
@@ -298,6 +303,24 @@ register_setting(
     label=_("Use product wishlist"),
     description="Show the links to the wishlist, and allow adding "
         "products to it.",
+    editable=False,
+    default=True,
+)
+
+register_setting(
+    name="SHOP_USE_RELATED_PRODUCTS",
+    label=_("Use related products"),
+    description="Show related products in templates, and allow "
+        "editing them in the admin.",
+    editable=False,
+    default=True,
+)
+
+register_setting(
+    name="SHOP_USE_UPSELL_PRODUCTS",
+    label=_("Use upsell products"),
+    description="Show upsell products in templates, and allow "
+        "editing them in the admin.",
     editable=False,
     default=True,
 )

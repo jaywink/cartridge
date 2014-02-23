@@ -1,4 +1,8 @@
 from datetime import timedelta
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import bytes, zip
+
 import hmac
 from locale import setlocale, LC_MONETARY
 try:
@@ -54,7 +58,19 @@ def make_choices(choices):
     """
     Zips a list with itself for field choices.
     """
-    return zip(choices, choices)
+    return list(zip(choices, choices))
+
+
+def clear_session(request, *names):
+    """
+    Removes values for the given session variables names
+    if they exist.
+    """
+    for name in names:
+        try:
+            del request.session[name]
+        except KeyError:
+            pass
 
 
 def recalculate_cart(request):
@@ -69,14 +85,14 @@ def recalculate_cart(request):
     # Rebind the cart to request since it's been modified.
     request.cart = Cart.objects.from_request(request)
     discount_code = request.session.get("discount_code", "")
-    discount_form = DiscountForm(request, {"discount_code": discount_code})
-    if discount_form.is_valid():
-        discount_form.set_discount()
-    else:
-        try:
-            del request.session["discount_total"]
-        except KeyError:
-            pass
+    if discount_code:
+        # Clear out any previously defined discount code
+        # session vars.
+        names = ("free_shipping", "discount_code", "discount_total")
+        clear_session(request, *names)
+        discount_form = DiscountForm(request, {"discount_code": discount_code})
+        if discount_form.is_valid():
+            discount_form.set_discount()
 
     handler = lambda s: import_dotted_path(s) if s else lambda *args: None
     billship_handler = handler(settings.SHOP_HANDLER_BILLING_SHIPPING)
@@ -93,7 +109,8 @@ def set_shipping(request, shipping_type, shipping_total):
     """
     Stores the shipping type and total in the session.
     """
-    request.session["shipping_type"] = shipping_type
+    from future.builtins import str
+    request.session["shipping_type"] = str(shipping_type)
     request.session["shipping_total"] = shipping_total
 
 
@@ -101,7 +118,8 @@ def set_tax(request, tax_type, tax_total):
     """
     Stores the tax type and total in the session.
     """
-    request.session["tax_type"] = tax_type
+    from future.builtins import str
+    request.session["tax_type"] = str(tax_type)
     request.session["tax_total"] = tax_total
 
 
@@ -110,14 +128,16 @@ def sign(value):
     Returns the hash of the given value, used for signing order key stored in
     cookie for remembering address fields.
     """
-    return hmac.new(settings.SECRET_KEY, value, digest).hexdigest()
+    key = bytes(settings.SECRET_KEY, encoding="utf8")
+    value = bytes(value, encoding="utf8")
+    return hmac.new(key, value, digest).hexdigest()
 
 
 def set_locale():
     """
     Sets the locale for currency formatting.
     """
-    currency_locale = settings.SHOP_CURRENCY_LOCALE
+    currency_locale = str(settings.SHOP_CURRENCY_LOCALE)
     try:
         if setlocale(LC_MONETARY, currency_locale) == "C":
             # C locale doesn't contain a suitable value for "frac_digits".

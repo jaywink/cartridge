@@ -1,109 +1,115 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: Cartridge\n"
 "Report-Msgid-Bugs-To: https://github.com/stephenmcd/cartridge/issues\n"
 "POT-Creation-Date: 2013-03-30 10:40-0430\n"
-"PO-Revision-Date: 2013-03-30 15:07+0000\n"
-"Last-Translator: Sebastián Ramírez Magrí <sebasmagri@gmail.com>\n"
+"PO-Revision-Date: 2013-10-27 11:30+0000\n"
+"Last-Translator: Markus Törnqvist <mjt@fadconsulting.com>\n"
 "Language-Team: Finnish (http://www.transifex.com/projects/p/cartridge/language/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Translated-Using: django-rosetta 0.7.2\n"
 
 #: admin.py:68
 msgid "Product filters"
-msgstr ""
+msgstr "Tuotefiltterit"
 
 #: admin.py:105
 msgid "Current variations"
-msgstr ""
+msgstr "Nykyiset muunnelmat"
 
 #: admin.py:127
 msgid "Other products"
-msgstr ""
+msgstr "Muut tuotteet"
 
 #: admin.py:139
 msgid "Create new variations"
-msgstr ""
+msgstr "Luo uusi muunnelma"
 
 #: admin.py:309
 msgid "Items"
-msgstr "Tuotetta"
+msgstr "Tuotteet"
 
 #: admin.py:329
 msgid "Billing details"
-msgstr ""
+msgstr "Laskutustiedot"
 
 #: admin.py:330
 msgid "Shipping details"
-msgstr ""
+msgstr "Toimitustiedot"
 
 #: admin.py:347 admin.py:367
 msgid "Apply to product and/or products in categories"
-msgstr ""
+msgstr "Sovella tuotteeseen ja/tai tuotteisiin kategorioissa"
 
 #: admin.py:349 admin.py:369
 msgid "Reduce unit price by"
-msgstr ""
+msgstr "Vähennä yksikön hintaa määrällä"
 
 #: admin.py:352
 msgid "Sale period"
-msgstr ""
+msgstr "Alennusmyynnin ajanjakso"
 
 #: admin.py:372
 msgid "Valid for"
-msgstr ""
+msgstr "Voimassa"
 
 #: checkout.py:38
 msgid "Flat rate shipping"
-msgstr "Postimaksut"
+msgstr "Toimitus kiinteään hintaan"
 
-#: checkout.py:156
+#: checkout.py:53 templates/shop/includes/order_totals.html:34
+#: templates/shop/includes/order_totals.txt:8
+msgid "Tax"
+msgstr "Vero"
+
+#: checkout.py:190
 msgid "Details"
-msgstr "Lisätiedot"
+msgstr "Yksityiskohdat"
 
-#: checkout.py:160
+#: checkout.py:194
 msgid "Address"
 msgstr "Osoite"
 
-#: checkout.py:163
+#: checkout.py:197
 msgid "Payment"
-msgstr "Maksutapa"
+msgstr "Maksu"
 
-#: checkout.py:167
+#: checkout.py:201
 msgid "Confirmation"
 msgstr "Vahvistus"
 
 #: defaults.py:17
 msgid "Controls the ordering and grouping of the admin menu."
-msgstr ""
+msgstr "Säätää admin-valikon järjestystä ja ryhmitystä."
 
 #: defaults.py:20 management/commands/product_db.py:31
 msgid "Content"
-msgstr ""
+msgstr "Sisältö"
 
 #: defaults.py:21
 msgid "Media Library"
-msgstr ""
+msgstr "Mediakirjasto"
 
 #: defaults.py:22
 msgid "Shop"
-msgstr ""
+msgstr "Kauppa"
 
 #: defaults.py:24
 msgid "Site"
-msgstr ""
+msgstr "Sivusto"
 
 #: defaults.py:25
 msgid "Users"
-msgstr ""
+msgstr "Käyttäjät"
 
 #: defaults.py:32
 msgid ""
@@ -111,147 +117,170 @@ msgid ""
 "form. Each model should be in the format ``app_label.model_name``. Only "
 "models that subclass ``mezzanine.core.models.Displayable`` should be used."
 msgstr ""
+"Sarja malleja, joita käytetään oletusvaihtoehtoina hakulomakkeessa. Joka "
+"mallin pitää olla muotoa ``app_label.model_name`. Vain mallit, jotka perivät "
+"luokasta ``mezzanine.core.models.Displayable`` kelpaavat."
 
 #: defaults.py:58
 msgid "Sequence of setting names available within templates."
-msgstr ""
+msgstr "Sarja sivupohjissa näkyviä asetusten nimiä."
 
-#: defaults.py:87
+#: defaults.py:88
 msgid "Enable featured images in shop categories"
-msgstr ""
-
-#: defaults.py:94
-msgid "Checkout account required"
-msgstr ""
+msgstr "Salli korostettu kuva kaupan kategorioissa"
 
 #: defaults.py:95
-msgid "If True, users must create a login for the checkout process."
-msgstr ""
+msgid "Checkout account required"
+msgstr "Tunnus vaaditaan ostamiseen"
 
-#: defaults.py:126
-msgid "Payment Enabled"
-msgstr ""
+#: defaults.py:96
+msgid "If True, users must create a login for the checkout process."
+msgstr "Jos True, käyttäjän pitää luoda tunnus ostaakseen."
 
 #: defaults.py:127
+msgid "Payment Enabled"
+msgstr "Maksaminen sallittu"
+
+#: defaults.py:128
 msgid "If False, there is no payment step on the checkout process."
-msgstr ""
+msgstr "Jos False, ostoprosessissa ei ole maksuvaihetta."
 
-#: defaults.py:135
+#: defaults.py:136
 msgid "Currency Locale"
-msgstr ""
-
-#: defaults.py:145
-msgid "Default Shipping Cost"
-msgstr ""
+msgstr "Valuutan maa-asetus"
 
 #: defaults.py:146
-msgid "Default cost of shipping when no custom shipping is implemented."
-msgstr ""
+msgid "Default Shipping Cost"
+msgstr "Oletustoimituskulu"
 
-#: defaults.py:154
-msgid "Discount in Cart"
-msgstr ""
+#: defaults.py:147
+msgid "Default cost of shipping when no custom shipping is implemented."
+msgstr "Toimituskulujen oletushinta kun omaa lähettämistä ei ole toteutettu."
 
 #: defaults.py:155
-msgid "Discount codes can be entered on the cart page."
-msgstr ""
+msgid "Discount in Cart"
+msgstr "Ostoskorin alennus"
 
-#: defaults.py:162
-msgid "Discount in Checkout"
-msgstr ""
+#: defaults.py:156
+msgid "Discount codes can be entered on the cart page."
+msgstr "Alennuskoodeja voi syöttää ostoskorin sivulla."
 
 #: defaults.py:163
+msgid "Discount in Checkout"
+msgstr "Ostotapahtuman alennus"
+
+#: defaults.py:164
 msgid "Discount codes can be entered on the first checkout step."
-msgstr ""
+msgstr "Alennuskoodeja voi syöttää ostamisen ensimmäisessä vaiheessa."
 
-#: defaults.py:170
+#: defaults.py:171
 msgid "Billing & Shipping Handler"
+msgstr "Laskutuksen ja toimituksen käsittelijä"
+
+#: defaults.py:183
+msgid "Tax Handler"
 msgstr ""
 
-#: defaults.py:181
+#: defaults.py:193
 msgid "Order Handler"
-msgstr ""
+msgstr "Tilauksen käsittelijä"
 
-#: defaults.py:192
+#: defaults.py:204
 msgid "Payment Handler"
-msgstr ""
+msgstr "Maksun käsittelijä"
 
-#: defaults.py:206
+#: defaults.py:218
 msgid "Size"
-msgstr ""
+msgstr "Koko"
 
-#: defaults.py:207
+#: defaults.py:219
 msgid "Colour"
-msgstr ""
+msgstr "Väri"
 
-#: defaults.py:213
+#: defaults.py:225
 msgid "Order Email Subject"
-msgstr ""
+msgstr "Tilaussähköpostin otsikko"
 
-#: defaults.py:214
+#: defaults.py:226
 msgid "Subject to be used when sending the order receipt email."
-msgstr ""
+msgstr "Otsikko, jota käytetään tilauskuitin sähköpostissa."
 
-#: defaults.py:216
+#: defaults.py:228
 msgid "Order Receipt"
-msgstr ""
-
-#: defaults.py:221
-msgid "From Email"
-msgstr ""
-
-#: defaults.py:222
-msgid "Email address from which order receipts should be emailed."
-msgstr ""
+msgstr "Tilauksen kuitti"
 
 #: defaults.py:233
-msgid "Unprocessed"
-msgstr ""
+msgid "From Email"
+msgstr "Lähettäjän sähköpostiosoite"
 
 #: defaults.py:234
-msgid "Processed"
-msgstr ""
+msgid "Email address from which order receipts should be emailed."
+msgstr "Osoite, josta tilausten kuitit lähetetään."
 
-#: defaults.py:240
-msgid "Products Per Category Page"
-msgstr ""
+#: defaults.py:243
+msgid "BCC receipts to"
+msgstr "Lähetä piilokopio kuiteista osoitteeseen"
 
-#: defaults.py:241
-msgid "Number of products to display per category page."
-msgstr ""
-
-#: defaults.py:252
-msgid "Recently added"
-msgstr "Viimeksi lisätyt"
-
-#: defaults.py:253
-msgid "Highest rated"
-msgstr "Korkeimmin arvioidut"
+#: defaults.py:244
+msgid "All order receipts will be BCCd to this address."
+msgstr "Kaikista tilauskuiteista lähetetään BCC osoitteeseen"
 
 #: defaults.py:254
+msgid "Unprocessed"
+msgstr "Käsittelemätön"
+
+#: defaults.py:246
+msgid "Processed"
+msgstr "Käsitelty"
+
+#: defaults.py:252
+msgid "Products Per Category Page"
+msgstr "Tuotteden lukumäärä kategoriasivulla"
+
+#: defaults.py:253
+msgid "Number of products to display per category page."
+msgstr "Montako tuotetta näytetään jokaisella kategoriasivulla"
+
+#: defaults.py:273
+msgid "Recently added"
+msgstr "Viimeksi lisätty"
+
+#: defaults.py:265
+msgid "Highest rated"
+msgstr "Korkeimmaksi arvosteltu"
+
+#: defaults.py:266
 msgid "Least expensive"
-msgstr "Halvimmat"
+msgstr "Edullisin"
 
-#: defaults.py:255
+#: defaults.py:267
 msgid "Most expensive"
-msgstr "Kalleimmat"
+msgstr "Kallein"
 
-#: defaults.py:261
+#: defaults.py:273
 msgid "Use product variations"
-msgstr ""
+msgstr "Käytä tuotevariaatioita"
+
+#: defaults.py:290
+msgid "Use product ratings"
+msgstr "Käytä tuotearvosteluja"
+
+#: defaults.py:298
+msgid "Use product wishlist"
+msgstr "Käytä tuotteiden toivomuslistaa"
 
 #: fields.py:56 management/commands/product_db.py:33
 msgid "SKU"
-msgstr ""
+msgstr "Varastokoodi"
 
 #: forms.py:28 templates/shop/product.html:82
 #: templates/shop/products/reservableproduct.html:87
 msgid "The selected options are currently unavailable."
-msgstr "Valittu tuote ei juuri nyt ole saatavilla."
+msgstr "Tekemäsi valinnat eivät ole tällä hetkellä saatavilla."
 
 #: forms.py:29
 msgid "The selected options are currently not in stock."
-msgstr "Valittua tuotetta ei juuri nyt ole varastossa."
+msgstr "Tekemäsi valinnat eivät ole tällä hetkellä varastossa."
 
 #: forms.py:30
 msgid "The selected quantity is currently unavailable."
@@ -263,82 +292,90 @@ msgstr "Koko aikajakso ei ole varattavissa."
 
 #: forms.py:32
 msgid "Cannot edit quantity of reservable product."
-msgstr ""
+msgstr "Valittua määrää ei ole tällä hetkellä saatavilla."
 "Varattavan tuotteen määrää ostoskorissa ei voi muokata. Poista varaus "
 "kokonaisena."
 
-#: forms.py:42 models.py:843 templates/shop/order_history.html:20
+#: forms.py:38 models.py:619 templates/shop/order_history.html:20
 msgid "Quantity"
 msgstr "Määrä"
 
-#: forms.py:254
+#: forms.py:258
 msgid "The discount code entered is invalid."
-msgstr "Alennuskoodi ei kelpaa."
+msgstr "Annettu alennuskoodi ei kelpaa."
 
-#: forms.py:266 models.py:1077
+#: forms.py:270 models.py:822
 msgid "Free shipping"
-msgstr "Ilmainen toimitus"
-
-#: forms.py:281
-msgid "My delivery details are the same as my billing details"
-msgstr "Toimitusosoite on sama kuin maksajan osoite"
-
-#: forms.py:283
-msgid "Remember my address for next time"
-msgstr "Muista osoitteeni seuraavaa kertaa varten"
-
-#: forms.py:284
-msgid "Cardholder name"
-msgstr ""
+msgstr "Maksuton toimitus"
 
 #: forms.py:285
-msgid "Card type"
-msgstr ""
+msgid "My delivery details are the same as my billing details"
+msgstr "Toimitustietoni ovat samat kuin laskutustietoni"
+
+#: forms.py:287
+msgid "Remember my address for next time"
+msgstr "Muista osoitteeni ensi kerralla"
 
 #: forms.py:288
+msgid "Cardholder name"
+msgstr "Kortin omistajan nimi"
+
+#: forms.py:289
+msgid "Card type"
+msgstr "Kortin tyyppi"
+
+#: forms.py:292
 msgid "Card number"
-msgstr ""
+msgstr "Kortin numero"
 
-#: forms.py:293
+#: forms.py:300
+msgid "Card expiry month"
+msgstr "Kortin umpeutumiskuukausi"
+
+#: forms.py:303
+msgid "Card expiry year"
+msgstr "Kortin umpeutumisvuosi"
+
+#: forms.py:304
 msgid "CCV"
-msgstr ""
+msgstr "CCV"
 
-#: forms.py:293
+#: forms.py:297
 msgid ""
 "A security code, usually the last 3 digits found on the back of your card."
-msgstr ""
+msgstr "Turvakoodi, yleensä 3 viimeistä numeroa korttisi takapuolella."
 
-#: forms.py:377
+#: forms.py:396
 msgid "A valid expiry date is required."
-msgstr ""
+msgstr "Oikea umpeutumispäivämäärä tarvitaan."
 
-#: forms.py:485
+#: forms.py:504
 msgid "Only one variation can be checked as the default."
-msgstr ""
+msgstr "Vain yksi variaatio voi olla valittu kerrallaan."
 
-#: forms.py:498
+#: forms.py:517
 msgid "Please enter a value for only one type of reduction."
-msgstr ""
+msgstr "Anna vain yhden alennuksen arvo."
 
-#: models.py:43 models.py:844
+#: models.py:40 models.py:620
 msgid "Unit price"
-msgstr "Yksikköhinta"
+msgstr "Kappalehinta"
 
 #: models.py:45
 msgid "Sale price"
-msgstr "Alennushinta"
+msgstr "Alennettu hinta"
 
 #: models.py:46
 msgid "Sale start"
-msgstr ""
+msgstr "Alennusmyynti alkaa"
 
 #: models.py:47
 msgid "Sale end"
-msgstr ""
+msgstr "Alennusmyynti päättyy"
 
 #: models.py:49
 msgid "Number in stock"
-msgstr ""
+msgstr "Varaston lukumäärä"
 
 #: models.py:104
 msgid "Price change"
@@ -354,28 +391,28 @@ msgstr ""
 
 #: models.py:121
 msgid "Available for purchase"
-msgstr ""
+msgstr "Ostettavissa"
 
 #: models.py:123 models.py:290 models.py:296 models.py:350
 #: management/commands/product_db.py:34
 msgid "Image"
-msgstr ""
+msgstr "Kuva"
 
-#: models.py:125 models.py:469
+#: models.py:100 models.py:333
 msgid "Product categories"
-msgstr ""
+msgstr "Tuotekategoriat"
 
 #: models.py:126
 msgid "Date added"
-msgstr ""
+msgstr "Lisäyspäivämäärä"
 
 #: models.py:129
 msgid "Related products"
-msgstr ""
+msgstr "Liittyvät tuotteet"
 
 #: models.py:131
 msgid "Upsell products"
-msgstr ""
+msgstr "Mainostetut tuotteet"
 
 #: models.py:132
 msgid "Rating"
@@ -383,11 +420,11 @@ msgstr ""
 
 #: models.py:139
 msgid "Product"
-msgstr ""
+msgstr "Tuote"
 
-#: models.py:140 models.py:453 models.py:944
+#: models.py:115 models.py:317 models.py:689
 msgid "Products"
-msgstr ""
+msgstr "Tuotteet"
 
 #: models.py:194
 msgid "Reservable Product"
@@ -407,154 +444,164 @@ msgstr ""
 
 #: models.py:292 models.py:842 management/commands/product_db.py:32
 msgid "Description"
-msgstr ""
+msgstr "Kuvaus"
 
 #: models.py:297
 msgid "Images"
-msgstr ""
+msgstr "Kuvat"
 
 #: models.py:313
 msgid "Type"
-msgstr ""
+msgstr "Tyyppi"
 
 #: models.py:315
 msgid "Name"
-msgstr ""
+msgstr "Nimi"
 
 #: models.py:323
 msgid "Product option"
-msgstr ""
+msgstr "Tuotevaihtoehto"
 
-#: models.py:324 models.py:456
+#: models.py:188 models.py:320
 msgid "Product options"
-msgstr ""
+msgstr "Tuotevaihtoehdot"
 
 #: models.py:349
 msgid "Default"
-msgstr ""
+msgstr "Oletus"
 
-#: models.py:449
+#: models.py:313
 msgid "Featured Image"
-msgstr ""
+msgstr "Ajankohtainen kuva"
 
-#: models.py:458 models.py:980
+#: models.py:322 models.py:725
 msgid "Sale"
-msgstr ""
+msgstr "Alennusmyynti"
 
-#: models.py:460
+#: models.py:324
 msgid "Minimum price"
-msgstr ""
+msgstr "Vähimmäishinta"
 
-#: models.py:461
+#: models.py:325
 msgid "Maximum price"
-msgstr ""
+msgstr "Enimmäishinta"
 
-#: models.py:462
+#: models.py:326
 msgid "Combined"
-msgstr ""
+msgstr "Yhdistetty"
 
-#: models.py:463
+#: models.py:327
 msgid ""
 "If checked, products must match all specified filters, otherwise products "
 "can match any specified filter."
 msgstr ""
+"Jos valittu, tuotteiden on täsmättävä valittuihin suodattimiin, tai muuten "
+"tuotteet voivat täsmätä mihin vain valittuun suodattimeen."
 
-#: models.py:468
+#: models.py:332
 msgid "Product category"
-msgstr ""
+msgstr "Tuotekategoria"
 
-#: models.py:522 models.py:531
+#: models.py:386 models.py:395
 msgid "First name"
 msgstr "Etunimi"
 
-#: models.py:523 models.py:532
+#: models.py:387 models.py:396
 msgid "Last name"
 msgstr "Sukunimi"
 
-#: models.py:524 models.py:533
+#: models.py:388 models.py:397
 msgid "Street"
-msgstr "Osoite"
+msgstr ""
 
-#: models.py:525 models.py:534
+#: models.py:389 models.py:398
 msgid "City/Suburb"
-msgstr "Kaupunki"
+msgstr ""
 
-#: models.py:526 models.py:535
+#: models.py:390 models.py:399
 msgid "State/Region"
-msgstr "Alue"
+msgstr ""
 
-#: models.py:527 models.py:536
+#: models.py:391 models.py:400
 msgid "Zip/Postcode"
 msgstr "Postinumero"
 
-#: models.py:528 models.py:537
+#: models.py:392 models.py:401
 msgid "Country"
 msgstr "Maa"
 
-#: models.py:529 models.py:538
+#: models.py:393 models.py:402
 msgid "Phone"
-msgstr "Puhelin"
+msgstr "Puhelinnumero"
 
-#: models.py:530
+#: models.py:394
 msgid "Email"
-msgstr "Sähköposti"
+msgstr "Sähköpostiosoite"
 
-#: models.py:539
+#: models.py:403
 msgid "Additional instructions"
-msgstr "Lisätietoja"
+msgstr "Lisäohjeistukset"
 
-#: models.py:541
+#: models.py:405
 msgid "Time"
 msgstr "Aika"
 
-#: models.py:544
+#: models.py:408
 msgid "Shipping type"
-msgstr "Toimitustapa"
+msgstr "Toimituksen tyyppi"
 
-#: models.py:545
+#: models.py:409
 msgid "Shipping total"
-msgstr "Toimitus"
+msgstr "Toimitus yhteensä"
 
-#: models.py:546
+#: models.py:416
+msgid "Tax type"
+msgstr "Veron tyyppi"
+
+#: models.py:417
+msgid "Tax total"
+msgstr "Vero yhteensä"
+
+#: models.py:418
 msgid "Item total"
-msgstr "Kokonaishinta"
+msgstr "Tuotteita yhteensä"
 
-#: models.py:547 models.py:1099
+#: models.py:413 models.py:844
 msgid "Discount code"
 msgstr "Alennuskoodi"
 
-#: models.py:548
+#: models.py:414
 msgid "Discount total"
-msgstr "Kokonaisalennus"
+msgstr "Alennus yhteensä"
 
-#: models.py:549
+#: models.py:415
 msgid "Order total"
-msgstr "Kokonaishinta"
+msgstr "Tilaus yhteensä"
 
-#: models.py:550
+#: models.py:416
 msgid "Transaction ID"
-msgstr "Maksusuorituksen ID"
+msgstr "Tapahtuman tunniste"
 
-#: models.py:553 templates/shop/order_history.html:22
+#: models.py:419 templates/shop/order_history.html:22
 msgid "Status"
 msgstr "Tila"
 
-#: models.py:565
+#: models.py:431
 msgid "Order"
 msgstr "Tilaus"
 
-#: models.py:566
+#: models.py:432
 msgid "Orders"
 msgstr "Tilaukset"
 
-#: models.py:677 templates/admin/shop/order/change_form.html:7
+#: models.py:517 templates/admin/shop/order/change_form.html:7
 #: templates/shop/complete.html:80
 msgid "Download PDF invoice"
-msgstr "Lataa PDF lasku"
+msgstr "Lataa PDF-lähete"
 
 #: models.py:845
 msgid "Total price"
-msgstr "Kokonaishinta"
+msgstr "Hinta yhteensä"
 
 #: models.py:848 templates/shop/cart.html:26
 msgid "From date"
@@ -570,182 +617,188 @@ msgstr ""
 
 #: models.py:941 management/commands/product_db.py:30
 msgid "Title"
-msgstr ""
+msgstr "Otsikko"
 
-#: models.py:942
+#: models.py:687
 msgid "Active"
-msgstr ""
+msgstr "Aktiivinen"
 
-#: models.py:947
+#: models.py:692
 msgid "Categories"
-msgstr ""
+msgstr "Kategoriat"
 
-#: models.py:948
+#: models.py:693
 msgid "Reduce by amount"
-msgstr ""
+msgstr "Vähennä määrällä"
 
-#: models.py:949
+#: models.py:694
 msgid "Reduce by percent"
-msgstr ""
+msgstr "Vähennä prosenteilla"
 
-#: models.py:952
+#: models.py:697
 msgid "Reduce to amount"
-msgstr ""
+msgstr "Vähennä määrään"
 
-#: models.py:953
+#: models.py:698
 msgid "Valid from"
-msgstr ""
+msgstr "Voimassa alkaen"
 
-#: models.py:954
+#: models.py:699
 msgid "Valid to"
-msgstr ""
+msgstr "Voimassa päättyen"
 
-#: models.py:981
+#: models.py:726
 msgid "Sales"
-msgstr ""
+msgstr "Alennusmyynnit"
 
-#: models.py:1075
+#: models.py:820
 msgid "Code"
-msgstr ""
+msgstr "Koodi"
 
-#: models.py:1076
+#: models.py:821
 msgid "Minimum total purchase"
-msgstr ""
+msgstr "Ostosten vähimmäishinta"
 
-#: models.py:1078
+#: models.py:823
 msgid "Uses remaining"
-msgstr ""
+msgstr "Käyttökertoja jäljellä"
 
-#: models.py:1079
+#: models.py:824
 msgid ""
 "If you wish to limit the number of times a code may be used, set this value. "
 "It will be decremented upon each use."
 msgstr ""
+"Jos haluat rajoittaa montako kertaa alennuskoodia voi käyttää, aseta tämä "
+"arvo. Sitä vähennetään joka käyttökerralla."
 
-#: models.py:1100
+#: models.py:845
 msgid "Discount codes"
-msgstr ""
+msgstr "Alennuskoodit"
 
-#: utils.py:104
+#: utils.py:111
 #, python-format
 msgid ""
 "Invalid currency locale specified for SHOP_CURRENCY_LOCALE: '%s'. You'll "
 "need to set the locale for your system, or configure the "
 "SHOP_CURRENCY_LOCALE setting in your settings module."
 msgstr ""
+"Epäkelpo maa-asetus annettu asetukselle SHOP_CURRENCY_LOCALE: '%s'. Sinun "
+"täytyy asettaa järjestelmäsi maa-asetukset tai määrittää "
+"SHOP_CURRENCY_LOCALE -asetus settings-moduulissasi."
 
-#: views.py:66 views.py:126
+#: views.py:60 views.py:102
 msgid "Item added to cart"
 msgstr "Tuote lisätty ostoskoriin"
 
 #: views.py:73
 msgid "Item added to wishlist"
-msgstr ""
+msgstr "Tuote lisätty toivomuslistalle"
 
-#: views.py:131
+#: views.py:107
 msgid "Item removed from wishlist"
-msgstr ""
+msgstr "Tuote poistettu toivomuslistalta"
 
-#: views.py:168
+#: views.py:144
 msgid "Your cart has expired"
-msgstr "Ostoskori on erääntynyt"
+msgstr "Korttisi on umpeutunut"
 
-#: views.py:176
+#: views.py:152
 msgid "Cart updated"
 msgstr "Ostoskori päivitetty"
 
 #: management/commands/product_db.py:35
 msgid "Category"
-msgstr ""
+msgstr "Kategoria"
 
 #: management/commands/product_db.py:36
 msgid "Sub-Category"
-msgstr ""
+msgstr "Alakategoria"
 
 #: management/commands/product_db.py:38
 msgid "Number in Stock"
-msgstr ""
+msgstr "Lukumäärä varastossa"
 
-#: management/commands/product_db.py:39 templates/shop/cart.html:23
+#: management/commands/product_db.py:39 templates/shop/cart.html:29
 #: templates/shop/includes/order_details.html:42
 msgid "Unit Price"
-msgstr "Yksikköhinta"
+msgstr "Kappalehinta"
 
 #: management/commands/product_db.py:40
 msgid "Sale Price"
-msgstr ""
+msgstr "Alennettu hinta"
 
 #: management/commands/product_db.py:41
 msgid "Sale Start Date"
-msgstr ""
+msgstr "Alennusmyynnin alkamispäivämäärä"
 
 #: management/commands/product_db.py:42
 msgid "Sale Start Time"
-msgstr ""
+msgstr "Alennusmyynnin alkamiskellonaika"
 
 #: management/commands/product_db.py:43
 msgid "Sale End Date"
-msgstr ""
+msgstr "Alennusmyynnin päättymispäivämäärä"
 
 #: management/commands/product_db.py:44
 msgid "Sale End Time"
-msgstr ""
+msgstr "Alennusmyynnin päättymiskellonaika"
 
 #: management/commands/product_db.py:47
 msgid "product"
-msgstr ""
+msgstr "tuote"
 
 #: management/commands/product_db.py:64
 msgid "Import/Export products from a csv file."
-msgstr ""
+msgstr "Tuo/Vie tuotteita CSV-tiedostosta."
 
 #: management/commands/product_db.py:71
 msgid "Import products from csv file."
-msgstr ""
+msgstr "Tuo tuotteita CSV-tiedostosta."
 
 #: management/commands/product_db.py:76
 msgid "Export products from csv file."
-msgstr ""
+msgstr "Vie tuotteita CSV-tiedostoon."
 
 #: management/commands/product_db.py:83
 msgid "Please provide csv file to import"
-msgstr ""
+msgstr "Anna CSV-tiedosto, josta tuoda"
 
 #: management/commands/product_db.py:87
 msgid "need to import or export"
-msgstr ""
+msgstr "täytyy joko tuoda tai viedä"
 
 #: management/commands/product_db.py:138
 msgid "Importing .."
-msgstr ""
+msgstr "Tuodaan .."
 
 #: management/commands/product_db.py:185
 msgid "Exporting .."
-msgstr ""
+msgstr "Viedään .."
 
 #: payment/egate.py:52 payment/stripe_api.py:45
 msgid "A general error occured: "
-msgstr ""
+msgstr "Yleinen virhe tapahtui:"
 
 #: payment/egate.py:55
 msgid "Transaction declined: "
-msgstr ""
+msgstr "Tapahtuma evätty:"
 
 #: payment/stripe_api.py:43
 msgid "Transaction declined"
-msgstr ""
+msgstr "Tapahtuma evätty"
 
 #: templates/accounts/account_profile_update.html:6
 msgid "View past orders"
-msgstr ""
+msgstr "Katso aiemmat tilaukset"
 
 #: templates/admin/shop/order/change_form.html:8
 msgid "History"
-msgstr ""
+msgstr "Historia"
 
-#: templates/admin/shop/product/change_list.html:15
-msgid "Add"
-msgstr ""
+#: templates/email/order_receipt.txt:5 templates/email/receipt.html:3
+#: templates/email/receipt_rtl.html:3
+msgid "Dear"
+msgstr "Hyvä"
 
 #: templates/email/order_receipt.html:5 templates/email/order_receipt.txt:5
 msgid "Dear"
@@ -753,20 +806,20 @@ msgstr "Arvoisa"
 
 #: templates/email/order_receipt.html:6 templates/email/order_receipt.txt:7
 msgid "Your order has been successful, details are below."
-msgstr "Tilauksenne on käsitelty onnistuneesti. Alla tiedot tilauksestanne."
+msgstr "Tilauksesi onnistui, alla ovat yksityiskohdat."
 
 #: templates/email/order_receipt.txt:9
 #: templates/shop/includes/order_details.html:5
 msgid "Order ID:"
-msgstr "Tilausnumero:"
+msgstr "Tilauksen tunniste:"
 
 #: templates/email/order_receipt.txt:11
 msgid "Billing Details:"
-msgstr "Maksutapa:"
+msgstr "Laskutuksen tiedot:"
 
 #: templates/email/order_receipt.txt:16
 msgid "Shipping Details:"
-msgstr "Toimitustapa:"
+msgstr "Toimituksen tiedot:"
 
 #: templates/email/order_receipt.txt:21
 msgid "Items Ordered:"
@@ -774,7 +827,7 @@ msgstr "Tilatut tuotteet:"
 
 #: templates/email/order_receipt.txt:23
 msgid "each"
-msgstr "per yksikkö"
+msgstr "kappale"
 
 #: templates/includes/user_panel.html:5
 #, python-format
@@ -787,29 +840,33 @@ msgstr[1] "%(cart_quantity)s tuotetta"
 msgid "in cart"
 msgstr "ostoskorissa"
 
-#: templates/includes/user_panel.html:10 templates/shop/cart.html:80
-msgid "Go to Checkout"
-msgstr "Kassalle"
+#: templates/includes/user_panel.html:10 templates/shop/cart.html:63
+msgid "Return to Checkout"
+msgstr "Palaa kassalle"
 
-#: templates/includes/user_panel.html:14
+#: templates/includes/user_panel.html:10 templates/shop/cart.html:63
+msgid "Go to Checkout"
+msgstr "Jatka kassalle"
+
+#: templates/includes/user_panel.html:15
 #, python-format
 msgid "Wishlist contains 1 item"
 msgid_plural " Wishlist contains %(wishlist_count)s items"
-msgstr[0] "Muistilistassa on yksi tuote"
-msgstr[1] "Muistilistassa on %(wishlist_count)s tuotetta"
+msgstr[0] "Toivomuslistalla on 1 tuote"
+msgstr[1] " Toivomuslistalla on %(wishlist_count)s tuotetta"
 
 #: templates/pages/category.html:38
 msgid "Sort by"
-msgstr "Järjestä"
+msgstr "Järjestys"
 
 #: templates/pages/category.html:62 templates/shop/product.html:77
 #: templates/shop/products/reservableproduct.html:82
 msgid "On sale:"
-msgstr "Alennuksessa:"
+msgstr "Alennusmyynnissä:"
 
 #: templates/pages/category.html:66
 msgid "Coming soon"
-msgstr "Tulossa pian"
+msgstr "Tulee pian"
 
 #: templates/shop/billing_shipping.html:17
 #, python-format
@@ -820,15 +877,14 @@ msgid ""
 "<a href=\"%(signup_url)s?next=%(next)s\">sign up</a>.\n"
 msgstr ""
 "\n"
-"Jos sinulla on ennestään käyttäjätili tai haluat luoda sellaisen, ole hyvä "
-"ja\n"
-"<a href=\"%(login_url)s?next=%(next)s\">kirjaudu sisään</a> tai\n"
-"<a href=\"%(signup_url)s?next=%(next)s\">rekisteröidy</a>.\n"
+"Jos sinulla on tunnus tai haluat rekisteröityä, ystävällisesti <a href="
+"\"%(login_url)s?next=%(next)s\">kirjaudu sisään</a> tai <a href="
+"\"%(signup_url)s?next=%(next)s\">rekisteröidy</a>.\n"
 
 #: templates/shop/billing_shipping.html:28 templates/shop/confirmation.html:8
 #: templates/shop/includes/order_details.html:13
 msgid "Billing Details"
-msgstr "Maksutiedot"
+msgstr "Laskutustiedot"
 
 #: templates/shop/billing_shipping.html:33
 msgid "Delivery Details"
@@ -839,19 +895,22 @@ msgstr "Toimitustiedot"
 msgid "Your Cart"
 msgstr "Ostoskorisi"
 
-#: templates/shop/cart.html:22 templates/shop/includes/order_details.html:37
+#: templates/shop/cart.html:22 templates/shop/includes/order_details.html:39
+#: templates/shop/includes/order_details_rtl.html:45
 msgid "Item"
 msgstr "Tuote"
 
-#: templates/shop/cart.html:24 templates/shop/includes/order_details.html:43
+#: templates/shop/cart.html:24 templates/shop/includes/order_details.html:41
+#: templates/shop/includes/order_details_rtl.html:43
 msgid "Qty"
 msgstr "Määrä"
 
-#: templates/shop/cart.html:29 templates/shop/includes/order_details.html:44
+#: templates/shop/cart.html:25 templates/shop/includes/order_details.html:42
+#: templates/shop/includes/order_details_rtl.html:42
 msgid "Price"
 msgstr "Hinta"
 
-#: templates/shop/cart.html:30
+#: templates/shop/cart.html:26
 msgid "Remove?"
 msgstr "Poista?"
 
@@ -863,17 +922,17 @@ msgstr "Viikonloppu"
 msgid "Update Cart"
 msgstr "Päivitä ostoskori"
 
-#: templates/shop/cart.html:89
+#: templates/shop/cart.html:67
 msgid "Apply"
 msgstr "Käytä"
 
-#: templates/shop/cart.html:95
+#: templates/shop/cart.html:73
 msgid "You may also like:"
-msgstr "Nämä voisivat myös kiinnostaa:"
+msgstr "Saatat myös pitää näistä:"
 
-#: templates/shop/cart.html:120
+#: templates/shop/cart.html:98
 msgid "Your Cart is empty."
-msgstr "Ostoskori on tyhjä."
+msgstr "Ostoskorisi on tyhjä."
 
 #: templates/shop/checkout.html:4 templates/shop/checkout.html.py:5
 msgid "Checkout"
@@ -887,9 +946,10 @@ msgstr "Vaihe"
 msgid "of"
 msgstr "/"
 
-#: templates/shop/checkout.html:26 templates/shop/complete.html:70
+#: templates/shop/checkout.html:26 templates/shop/checkout.html.py:73
+#: templates/shop/complete.html:70
 msgid "Complete"
-msgstr "Vahvista"
+msgstr "Valmis"
 
 #: templates/shop/checkout.html:46
 msgid "Edit Cart"
@@ -897,28 +957,28 @@ msgstr "Muokkaa ostoskoria"
 
 #: templates/shop/checkout.html:59
 msgid "Please correct the errors below."
-msgstr "Alla olevat virheet tulee korjata."
+msgstr "Ystävällisesti korjaa allaolevat virheet."
 
 #: templates/shop/checkout.html:70
 msgid "Next"
-msgstr "Seuraava vaihe"
+msgstr "Seuraava"
 
 #: templates/shop/checkout.html:72
 msgid "Back"
-msgstr "Takaisin"
+msgstr "Edellinen"
 
 #: templates/shop/checkout.html:77
 msgid "Your cart is empty."
-msgstr "Ostoskori on tyhjä."
+msgstr "Ostoskorisi on tyhjä."
 
 #: templates/shop/checkout.html:78
 msgid ""
 "This may be due to your session timing out after a period of inactivity."
-msgstr "Tämä saattaa johtua istuntosi vanhenemisesta."
+msgstr "Tämä voi johtua aikakatkaisusta pitkän paikallaolon jälkeen."
 
 #: templates/shop/checkout.html:79
 msgid "We apologize for the inconvenience."
-msgstr "Pahoittelemme tapahtunutta."
+msgstr "Pahoittelemme vaivasta."
 
 #: templates/shop/checkout.html:81 templates/shop/wishlist.html:40
 msgid "Continue Shopping"
@@ -926,23 +986,23 @@ msgstr "Jatka ostoksia"
 
 #: templates/shop/complete.html:4 templates/shop/complete.html.py:61
 msgid "Order Complete"
-msgstr "Tilaus vahvistettu"
+msgstr "Tilaus on valmis"
 
 #: templates/shop/complete.html:75
 msgid "Thank you for shopping with us, your order is complete."
-msgstr "Kiitos tilauksestanne."
+msgstr "Kiitos kun ostitte meiltä, tilauksesi on valmis."
 
 #: templates/shop/complete.html:76
 msgid "We've sent you a receipt via email."
-msgstr "Olemme lähettäneet tilausvahvistuksen sähköpostitse."
+msgstr "Lähetimme sinulle kuitin sähköpostissa."
 
 #: templates/shop/complete.html:77
 msgid "You can also view your invoice using one of the links below."
-msgstr "Voit myös katsoa laskun tietoja alla olevista linkeistä."
+msgstr "Voit myös tarkistaa lähetteen allaolevista linkeistä."
 
 #: templates/shop/complete.html:81
 msgid "View invoice in your browser"
-msgstr "Lasku selaimessa"
+msgstr "Katso lähete selaimessa"
 
 #: templates/shop/confirmation.html:17
 #: templates/shop/includes/order_details.html:14
@@ -956,7 +1016,7 @@ msgstr "Tilaushistoria"
 
 #: templates/shop/order_history.html:19
 msgid "Date / time"
-msgstr "Aika"
+msgstr "Päivämäärä / kellonaika"
 
 #: templates/shop/order_history.html:21
 msgid "Paid"
@@ -968,34 +1028,32 @@ msgstr "Lataa PDF"
 
 #: templates/shop/order_history.html:33
 msgid "View invoice"
-msgstr "Näytä lasku"
+msgstr "Katso lähete"
 
 #: templates/shop/order_history.html:41
 msgid "You have not ordered anything from us yet."
-msgstr ""
+msgstr "Et ole tilannut meiltä mitään vielä."
 
 #: templates/shop/product.html:93 templates/shop/wishlist.html:30
 msgid "Buy"
-msgstr "Lisää koriin"
+msgstr "Osta"
 
-#: templates/shop/product.html:94
+#: templates/shop/product.html:95
 msgid "Save for later"
-msgstr ""
+msgstr "Tallenna myöhempää ajankohtaa varten"
 
-#: templates/shop/product.html:99
-#: templates/shop/products/reservableproduct.html:104
+#: templates/shop/product.html:100
 msgid "This product is currently unavailable."
-msgstr "Tämä tuote ei ole toistaiseksi saatavilla."
+msgstr "Tämä tuote ei ole tällä hetkellä saatavilla"
 
-#: templates/shop/product.html:105
-#: templates/shop/products/reservableproduct.html:112
+#: templates/shop/product.html:108
 msgid "Related Products"
-msgstr "Tuotteeseen liittyvät tuotteet"
+msgstr "Liittyvät tuotteet"
 
 #: templates/shop/wishlist.html:4 templates/shop/wishlist.html.py:5
 #: templates/shop/wishlist.html:9
 msgid "Your Wishlist"
-msgstr "Muistilista"
+msgstr "Toivomuslistasi"
 
 #: templates/shop/wishlist.html:31
 msgid "Remove"
@@ -1003,7 +1061,7 @@ msgstr "Poista"
 
 #: templates/shop/wishlist.html:38
 msgid "Your wishlist is empty."
-msgstr "Muistilista on tyhjä."
+msgstr "Toivomuslistasi on tyhjä."
 
 #: templates/shop/includes/order_details.html:10
 msgid "Your Details"
@@ -1016,7 +1074,7 @@ msgstr "Tilatut tuotteet"
 #: templates/shop/includes/order_totals.html:4
 #: templates/shop/includes/order_totals.txt:2
 msgid "Sub total"
-msgstr "Kokonaishinta"
+msgstr "Välisumma"
 
 #: templates/shop/includes/order_totals.html:12
 #: templates/shop/includes/order_totals.txt:4
@@ -1031,7 +1089,7 @@ msgstr "Toimitus"
 #: templates/shop/includes/order_totals.html:28
 #: templates/shop/includes/order_totals.txt:7
 msgid "Total"
-msgstr "Lopullinen hinta"
+msgstr "Yhteensä"
 
 #: templates/shop/includes/payment_fields.html:3
 msgid "Payment Details"
@@ -1039,4 +1097,4 @@ msgstr "Maksutiedot"
 
 #: templates/shop/includes/payment_fields.html:8
 msgid "Card Expiry"
-msgstr ""
+msgstr "Kortin umpeutuminen"

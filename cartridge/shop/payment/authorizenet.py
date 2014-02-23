@@ -1,4 +1,11 @@
-import urllib2
+from __future__ import unicode_literals
+from future.builtins import str
+
+try:
+    from urllib.request import Request, urlopen
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import Request, urlopen, URLError
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.http import urlencode
@@ -82,13 +89,10 @@ def process(request, order_form, order):
     trans['postString'] = (part1 + urlencode(trans['transactionData']) +
                            part2 + part3)
 
-    conn = urllib2.Request(url=trans['connection'], data=trans['postString'])
-    # useful for debugging transactions
-    #print trans['postString']
+    request_args = {"url": trans['connection'], "data": trans['postString']}
     try:
-        f = urllib2.urlopen(conn)
-        all_results = f.read()
-    except urllib2.URLError:
+        all_results = urlopen(Request(**request_args)).read()
+    except URLError:
         raise CheckoutError("Could not talk to authorize.net payment gateway")
 
     parsed_results = all_results.split(trans['configuration']['x_delim_char'])

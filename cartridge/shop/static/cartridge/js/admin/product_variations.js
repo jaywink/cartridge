@@ -1,4 +1,4 @@
-$(function() {
+jQuery(function($) {
 
     var grappelli = $('.admin-title').length == 1;
 
@@ -44,5 +44,7 @@ $(function() {
             });
         }
     }
+
+    $('.variations-help').insertAfter('.create-variations h2').show();
 
 });

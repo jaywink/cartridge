@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import zip
 
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -77,6 +80,18 @@ class OrderManager(Manager):
             return orders[0]
         raise self.model.DoesNotExist
 
+    def get_for_user(self, order_id, request):
+        """
+        Used for retrieving a single order, ensuring the user in
+        the given request object can access it.
+        """
+        lookup = {"id": order_id}
+        if not request.user.is_authenticated():
+            lookup["key"] = request.session.session_key
+        elif not request.user.is_staff:
+            lookup["user_id"] = request.user.id
+        return self.get(**lookup)
+
 
 class ProductOptionManager(Manager):
 
@@ -112,12 +127,12 @@ class ProductVariationManager(Manager):
             options = SortedDict(options)
             # Build all combinations of options.
             variations = [[]]
-            for values_list in options.values():
+            for values_list in list(options.values()):
                 variations = [x + [y] for x in variations for y in values_list]
             for variation in variations:
                 # Lookup unspecified options as null to ensure a
                 # unique filter.
-                variation = dict(zip(options.keys(), variation))
+                variation = dict(list(zip(list(options.keys()), variation)))
                 lookup = dict(variation)
                 lookup.update(self._empty_options_lookup(exclude=variation))
                 try:
@@ -158,7 +173,7 @@ class ProductVariationManager(Manager):
             image = image[0]
         for variation in variations:
             save = False
-            if unicode(variation.image_id) in deleted_image_ids:
+            if str(variation.image_id) in deleted_image_ids:
                 variation.image = None
                 save = True
             if image and not variation.image:

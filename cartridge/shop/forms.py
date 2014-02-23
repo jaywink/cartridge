@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from future.builtins import filter, int, range, str, super, zip
+from future.utils import with_metaclass
 
 from copy import copy
 from datetime import date
@@ -21,7 +23,8 @@ from mezzanine.core.templatetags.mezzanine_tags import thumbnail
 from cartridge.shop import checkout
 from cartridge.shop.models import Product, ReservableProduct, ProductOption, ProductVariation
 from cartridge.shop.models import Cart, CartItem, Order, DiscountCode, SpecialPrice
-from cartridge.shop.utils import make_choices, set_locale, set_shipping
+from cartridge.shop.utils import (make_choices, set_locale, set_shipping,
+                                  clear_session)
 
 
 ADD_PRODUCT_ERRORS = {
@@ -73,13 +76,13 @@ class AddProductForm(forms.Form):
         option_fields = ProductVariation.option_fields()
         if not option_fields:
             return
-        option_names, option_labels = zip(*[(f.name, f.verbose_name)
-            for f in option_fields])
-        option_values = zip(*self._product.variations.filter(
-            unit_price__isnull=False).values_list(*option_names))
+        option_names, option_labels = list(zip(*[(f.name, f.verbose_name)
+            for f in option_fields]))
+        option_values = list(zip(*self._product.variations.filter(
+            unit_price__isnull=False).values_list(*option_names)))
         if option_values:
             for i, name in enumerate(option_names):
-                values = filter(None, set(option_values[i]))
+                values = [_f for _f in set(option_values[i]) if _f]
                 if values:
                     field = forms.ChoiceField(label=option_labels[i],
                                               choices=make_choices(values))
@@ -211,7 +214,7 @@ class FormsetForm(object):
         if not hasattr(self, "_fields_done"):
             self._fields_done = []
         fieldset.non_field_errors = lambda *args: None
-        names = filter(lambda f: f not in self._fields_done, field_names)
+        names = [f for f in field_names if f not in self._fields_done]
         fieldset.fields = SortedDict([(f, self.fields[f]) for f in names])
         self._fields_done.extend(names)
         return fieldset
@@ -238,7 +241,7 @@ class FormsetForm(object):
             ("^other_fields$", lambda:
                 self.fields.keys()),
             ("^hidden_fields$", lambda:
-                [n for n, f in self.fields.iteritems()
+                [n for n, f in self.fields.items()
                  if isinstance(f.widget, forms.HiddenInput)]),
             ("^(\w*)_fields$", lambda name:
                 [f for f in self.fields.keys() if f.startswith(name)]),
@@ -247,7 +250,7 @@ class FormsetForm(object):
             ("^fields_before_(\w*)$", lambda name:
                 takewhile(lambda f: f != name, self.fields.keys())),
             ("^fields_after_(\w*)$", lambda name:
-                list(dropwhile(lambda f: f != name, self.fields.keys()))[1:]),
+                dropwhile(lambda f: f != name, self.fields.keys())[1:]),
         )
         for filter_exp, filter_func in filters:
             filter_args = match(filter_exp, name)
@@ -275,13 +278,6 @@ class DiscountForm(forms.ModelForm):
         Validate the discount code if given, and attach the discount
         instance to the form.
         """
-        # Test session behaves weirdly when we try and remove applied
-        # discounts when testing multiple discounts, so we allow multiple
-        # discounts when running tests.
-        testing = getattr(settings, "TESTING", False)
-        if "discount_code" in self._request.session and not testing:
-            # Already applied
-            return ""
         code = self.cleaned_data.get("discount_code", "")
         cart = self._request.cart
         if code:
@@ -299,12 +295,22 @@ class DiscountForm(forms.ModelForm):
         """
         discount = getattr(self, "_discount", None)
         if discount is not None:
+            # Clear out any previously defined discount code
+            # session vars.
+            names = ("free_shipping", "discount_code", "discount_total")
+            clear_session(self._request, *names)
             total = self._request.cart.calculate_discount(discount)
             if discount.free_shipping:
                 set_shipping(self._request, _("Free shipping"), 0)
+            else:
+                # A previously entered discount code providing free
+                # shipping may have been entered prior to this
+                # discount code beign entered, so clear out any
+                # previously set shipping vars.
+                clear_session(self._request, "shipping_type", "shipping_total")
             self._request.session["free_shipping"] = discount.free_shipping
             self._request.session["discount_code"] = discount.code
-            self._request.session["discount_total"] = total
+            self._request.session["discount_total"] = str(total)
 
 
 class OrderForm(FormsetForm, DiscountForm):
@@ -324,10 +330,10 @@ class OrderForm(FormsetForm, DiscountForm):
         widget=forms.RadioSelect,
         choices=make_choices(settings.SHOP_CARD_TYPES))
     card_number = forms.CharField(label=_("Card number"))
-    card_expiry_month = forms.ChoiceField(
+    card_expiry_month = forms.ChoiceField(label=_("Card expiry month"),
         initial="%02d" % date.today().month,
         choices=make_choices(["%02d" % i for i in range(1, 13)]))
-    card_expiry_year = forms.ChoiceField()
+    card_expiry_year = forms.ChoiceField(label=_("Card expiry year"))
     card_ccv = forms.CharField(label=_("CCV"), help_text=_("A security code, "
         "usually the last 3 digits found on the back of your card."))
 
@@ -371,14 +377,11 @@ class OrderForm(FormsetForm, DiscountForm):
         super(OrderForm, self).__init__(request, data=data, initial=initial)
         self._checkout_errors = errors
 
-        # Hide discount code field if discount already applied,
-        # discount field shouldn't appear in checkout, or if no
-        # discount codes are active.
+        # Hide discount code field if it shouldn't appear in checkout,
+        # or if no discount codes are active.
         settings.use_editable()
-        no_discounts = not DiscountCode.objects.active().exists()
-        discount_applied = "discount_code" in getattr(request, "session", {})
-        discount_in_checkout = settings.SHOP_DISCOUNT_FIELD_IN_CHECKOUT
-        if discount_applied or no_discounts or not discount_in_checkout:
+        if not (settings.SHOP_DISCOUNT_FIELD_IN_CHECKOUT and
+                DiscountCode.objects.active().exists()):
             self.fields["discount_code"].widget = forms.HiddenInput()
 
         # Determine which sets of fields to hide for each checkout step.
@@ -407,7 +410,7 @@ class OrderForm(FormsetForm, DiscountForm):
 
         # Set year choices for cc expiry, relative to the current year.
         year = now().year
-        choices = make_choices(range(year, year + 21))
+        choices = make_choices(list(range(year, year + 21)))
         self.fields["card_expiry_year"].choices = choices
 
     @classmethod
@@ -446,7 +449,7 @@ class OrderForm(FormsetForm, DiscountForm):
         """
         if self._checkout_errors:
             raise forms.ValidationError(self._checkout_errors)
-        return self.cleaned_data
+        return super(OrderForm, self).clean()
 
 
 #######################
@@ -499,11 +502,11 @@ class ProductAdminFormMetaclass(ModelFormMetaclass):
         return super(ProductAdminFormMetaclass, cls).__new__(*args)
 
 
-class ProductAdminForm(forms.ModelForm):
+class ProductAdminForm(with_metaclass(ProductAdminFormMetaclass,
+                                      forms.ModelForm)):
     """
     Admin form for the Product model.
     """
-    __metaclass__ = ProductAdminFormMetaclass
 
     class Meta:
         model = Product
@@ -512,16 +515,18 @@ class ProductAdminForm(forms.ModelForm):
         """
         Set the choices for each of the fields for product options.
         Also remove the current instance from choices for related and
-        upsell products.
+        upsell products (if enabled).
         """
         super(ProductAdminForm, self).__init__(*args, **kwargs)
-        for field, options in ProductOption.objects.as_fields().items():
+        for field, options in list(ProductOption.objects.as_fields().items()):
             self.fields[field].choices = make_choices(options)
         instance = kwargs.get("instance")
         if instance:
             queryset = Product.objects.exclude(id=instance.id)
-            self.fields["related_products"].queryset = queryset
-            self.fields["upsell_products"].queryset = queryset
+            if settings.SHOP_USE_RELATED_PRODUCTS:
+                self.fields["related_products"].queryset = queryset
+            if settings.SHOP_USE_UPSELL_PRODUCTS:
+                self.fields["upsell_products"].queryset = queryset
 
 
 class ProductVariationAdminForm(forms.ModelForm):
@@ -542,6 +547,7 @@ class ProductVariationAdminFormset(BaseInlineFormSet):
     Ensure no more than one variation is checked as default.
     """
     def clean(self):
+        super(ProductVariationAdminFormset, self).clean()
         if len([f for f in self.forms if hasattr(f, "cleaned_data") and
             f.cleaned_data.get("default", False)]) > 1:
             error = _("Only one variation can be checked as the default.")
@@ -555,11 +561,12 @@ class DiscountAdminForm(forms.ModelForm):
     """
     def clean(self):
         fields = [f for f in self.fields if f.startswith("discount_")]
-        reductions = filter(None, [self.cleaned_data.get(f) for f in fields])
+        reductions = [self.cleaned_data.get(f) for f in fields
+                      if self.cleaned_data.get(f)]
         if len(reductions) > 1:
             error = _("Please enter a value for only one type of reduction.")
             self._errors[fields[0]] = self.error_class([error])
-        return self.cleaned_data
+        return super(DiscountAdminForm, self).clean()
 
 
 class SpecialPriceAdminForm(forms.ModelForm):

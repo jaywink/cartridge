@@ -1,24 +1,30 @@
-from collections import defaultdict
+from __future__ import unicode_literals
+from future.builtins import int, str
+
+from json import dumps
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages import info
-from django.core.urlresolvers import get_callable, reverse
+from django.core.urlresolvers import reverse
+from django.db.models import Sum
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 from django.template.loader import get_template
-from django.utils import simplejson
 from django.utils.translation import ugettext as _
 from django.views.decorators.cache import never_cache
 
 from mezzanine.conf import settings
 from mezzanine.utils.importing import import_dotted_path
 from mezzanine.utils.views import render, set_cookie, paginate
+from mezzanine.utils.urls import next_url
 
 from cartridge.shop import checkout
-from cartridge.shop.forms import AddProductForm, DiscountForm, CartItemFormSet
-from cartridge.shop.models import Product, ReservableProduct, ProductVariation, Order, OrderItem
+from cartridge.shop.forms import (AddProductForm, CartItemFormSet,
+                                  DiscountForm, OrderForm)
+from cartridge.shop.models import Product, ProductVariation, Order
+from cartridge.shop.models import ReservableProduct, OrderItem
 from cartridge.shop.models import DiscountCode
 from cartridge.shop.utils import recalculate_cart, sign
 
@@ -31,7 +37,8 @@ payment_handler = handler(settings.SHOP_HANDLER_PAYMENT)
 order_handler = handler(settings.SHOP_HANDLER_ORDER)
 
 
-def product(request, slug, template="shop/product.html"):
+def product(request, slug, template="shop/product.html",
+            form_class=AddProductForm):
     """
     Display a product - convert the product variations to JSON as well as
     handling adding the product to either the cart or the wishlist.
@@ -40,17 +47,16 @@ def product(request, slug, template="shop/product.html"):
     product = get_object_or_404(published_products, slug=slug)
     fields = [f.name for f in ProductVariation.option_fields()]
     variations = product.variations.all()
-    variations_json = simplejson.dumps([dict([(f, getattr(v, f))
-                                        for f in fields + ["sku", "image_id"]])
-                                        for v in variations])
+    variations_json = dumps([dict([(f, getattr(v, f))
+        for f in fields + ["sku", "image_id"]]) for v in variations])
     to_cart = (request.method == "POST" and
                request.POST.get("add_wishlist") is None)
     initial_data = {}
     if variations:
         initial_data = dict([(f, getattr(variations[0], f)) for f in fields])
     initial_data["quantity"] = 1
-    add_product_form = AddProductForm(request.POST or None, product=product,
-                                      initial=initial_data, to_cart=to_cart)
+    add_product_form = form_class(request.POST or None, product=product,
+                                  initial=initial_data, to_cart=to_cart)
     if request.method == "POST":
         if add_product_form.is_valid():
             if to_cart:
@@ -74,6 +80,9 @@ def product(request, slug, template="shop/product.html"):
                 response = redirect("shop_wishlist")
                 set_cookie(response, "wishlist", ",".join(skus))
                 return response
+    related = []
+    if settings.SHOP_USE_RELATED_PRODUCTS:
+        related = product.related_products.published(for_user=request.user)
     if product.content_model == 'reservableproduct':
         # update reservations
         reservable = ReservableProduct.objects.get(id=product.id)
@@ -90,18 +99,18 @@ def product(request, slug, template="shop/product.html"):
         "variations": variations,
         "variations_json": variations_json,
         "has_available_variations": any([v.has_price() for v in variations]),
-        "related_products": product.related_products.published(
-                                                      for_user=request.user),
+        "related_products": related,
         "add_product_form": add_product_form,
         "reservations": reservations,
         "reservable": reservable
     }
-    templates = [u"shop/%s.html" % unicode(product.slug), template]
+    templates = [u"shop/%s.html" % str(product.slug), template]
     return render(request, templates, context)
 
 
 @never_cache
-def wishlist(request, template="shop/wishlist.html"):
+def wishlist(request, template="shop/wishlist.html",
+             form_class=AddProductForm):
     """
     Display the wishlist and handle removing items from the wishlist and
     adding them to the cart.
@@ -114,8 +123,8 @@ def wishlist(request, template="shop/wishlist.html"):
     error = None
     if request.method == "POST":
         to_cart = request.POST.get("add_cart")
-        add_product_form = AddProductForm(request.POST or None,
-                                          to_cart=to_cart)
+        add_product_form = form_class(request.POST or None,
+                                      to_cart=to_cart)
         if to_cart:
             if add_product_form.is_valid():
                 request.cart.add_item(add_product_form.variation, 1)
@@ -123,7 +132,7 @@ def wishlist(request, template="shop/wishlist.html"):
                 message = _("Item added to cart")
                 url = "shop_cart"
             else:
-                error = add_product_form.errors.values()[0]
+                error = list(add_product_form.errors.values())[0]
         else:
             message = _("Item removed from wishlist")
             url = "shop_wishlist"
@@ -150,12 +159,14 @@ def wishlist(request, template="shop/wishlist.html"):
 
 
 @never_cache
-def cart(request, template="shop/cart.html"):
+def cart(request, template="shop/cart.html",
+         cart_formset_class=CartItemFormSet,
+         discount_form_class=DiscountForm):
     """
     Display cart and handle removing items from the cart.
     """
-    cart_formset = CartItemFormSet(instance=request.cart)
-    discount_form = DiscountForm(request, request.POST or None)
+    cart_formset = cart_formset_class(instance=request.cart)
+    discount_form = discount_form_class(request, request.POST or None)
     if request.method == "POST":
         valid = True
         if request.POST.get("update_cart"):
@@ -164,8 +175,8 @@ def cart(request, template="shop/cart.html"):
                 # Session timed out.
                 info(request, _("Your cart has expired"))
             else:
-                cart_formset = CartItemFormSet(request.POST,
-                                               instance=request.cart)
+                cart_formset = cart_formset_class(request.POST,
+                                                  instance=request.cart)
                 valid = cart_formset.is_valid()
                 if valid:
                     cart_formset.save()
@@ -178,26 +189,32 @@ def cart(request, template="shop/cart.html"):
                     # via the error message, which we need to
                     # copy over to the new formset here.
                     errors = cart_formset._errors
-                    cart_formset = CartItemFormSet(instance=request.cart)
+                    cart_formset = cart_formset_class(instance=request.cart)
                     cart_formset._errors = errors
         else:
             valid = discount_form.is_valid()
             if valid:
                 discount_form.set_discount()
+            # Potentially need to set shipping if a discount code
+            # was previously entered with free shipping, and then
+            # another was entered (replacing the old) without
+            # free shipping, *and* the user has already progressed
+            # to the final checkout step, which they'd go straight
+            # to when returning to checkout, bypassing billing and
+            # shipping details step where shipping is normally set.
+            recalculate_cart(request)
         if valid:
             return redirect("shop_cart")
     context = {"cart_formset": cart_formset}
     settings.use_editable()
-    no_discounts = not DiscountCode.objects.active().exists()
-    discount_applied = "discount_code" in request.session
-    discount_in_cart = settings.SHOP_DISCOUNT_FIELD_IN_CART
-    if not no_discounts and not discount_applied and discount_in_cart:
+    if (settings.SHOP_DISCOUNT_FIELD_IN_CART and
+        DiscountCode.objects.active().exists()):
         context["discount_form"] = discount_form
     return render(request, template, context)
 
 
 @never_cache
-def checkout_steps(request):
+def checkout_steps(request, form_class=OrderForm):
     """
     Display the order form and handle processing of each step.
     """
@@ -210,8 +227,16 @@ def checkout_steps(request):
         url = "%s?next=%s" % (settings.LOGIN_URL, reverse("shop_checkout"))
         return redirect(url)
 
-    # Determine the Form class to use during the checkout process
-    form_class = get_callable(settings.SHOP_CHECKOUT_FORM_CLASS)
+    try:
+        settings.SHOP_CHECKOUT_FORM_CLASS
+    except AttributeError:
+        pass
+    else:
+        from warnings import warn
+        warn("The SHOP_CHECKOUT_FORM_CLASS setting is deprecated - please "
+             "define your own urlpattern for the checkout_steps view, "
+             "passing in your own form_class argument.")
+        form_class = import_dotted_path(settings.SHOP_CHECKOUT_FORM_CLASS)
 
     initial = checkout.initial_order_data(request, form_class)
     step = int(request.POST.get("step", None)
@@ -243,12 +268,15 @@ def checkout_steps(request):
 
             # FIRST CHECKOUT STEP - handle shipping and discount code.
             if step == checkout.CHECKOUT_STEP_FIRST:
+                # Discount should be set before shipping, to allow
+                # for free shipping to be first set by a discount
+                # code.
+                form.set_discount()
                 try:
                     billship_handler(request, form)
                     tax_handler(request, form)
-                except checkout.CheckoutError, e:
+                except checkout.CheckoutError as e:
                     checkout_errors.append(e)
-                form.set_discount()
 
             # FINAL CHECKOUT STEP - handle payment and process order.
             if step == checkout.CHECKOUT_STEP_LAST and not checkout_errors:
@@ -262,7 +290,7 @@ def checkout_steps(request):
                 # Try payment.
                 try:
                     transaction_id = payment_handler(request, form, order)
-                except checkout.CheckoutError, e:
+                except checkout.CheckoutError as e:
                     # Error in payment handler.
                     order.delete()
                     checkout_errors.append(e)
@@ -340,18 +368,17 @@ def complete(request, template="shop/complete.html"):
     return render(request, template, context)
 
 
-def invoice(request, order_id, template="shop/order_invoice.html"):
+def invoice(request, order_id, template="shop/order_invoice.html",
+                               template_pdf="shop/order_invoice_pdf.html"):
     """
     Display a plain text invoice for the given order. The order must
     belong to the user which is checked via session or ID if
     authenticated, or if the current user is staff.
     """
-    lookup = {"id": order_id}
-    if not request.user.is_authenticated():
-        lookup["key"] = request.session.session_key
-    elif not request.user.is_staff:
-        lookup["user_id"] = request.user.id
-    order = get_object_or_404(Order, **lookup)
+    try:
+        order = Order.objects.get_for_user(order_id, request)
+    except Order.DoesNotExist:
+        raise Http404
     context = {"order": order}
     if order.has_reservables:
         context["has_reservables"] = True
@@ -363,7 +390,7 @@ def invoice(request, order_id, template="shop/order_invoice.html"):
         response = HttpResponse(mimetype="application/pdf")
         name = slugify("%s-invoice-%s" % (settings.SITE_TITLE, order.id))
         response["Content-Disposition"] = "attachment; filename=%s.pdf" % name
-        html = get_template(template).render(context)
+        html = get_template(template_pdf).render(context)
         import ho.pisa
         ho.pisa.CreatePDF(html, response)
         return response
@@ -375,17 +402,37 @@ def order_history(request, template="shop/order_history.html"):
     """
     Display a list of the currently logged-in user's past orders.
     """
-    all_orders = Order.objects.filter(user_id=request.user.id)
+    all_orders = (Order.objects
+                  .filter(user_id=request.user.id)
+                  .annotate(quantity_total=Sum('items__quantity')))
     orders = paginate(all_orders.order_by('-time'),
                       request.GET.get("page", 1),
                       settings.SHOP_PER_PAGE_CATEGORY,
                       settings.MAX_PAGING_LINKS)
-    # Add the total quantity to each order - this can probably be
-    # replaced with fetch_related and Sum when we drop Django 1.3
-    order_quantities = defaultdict(int)
-    for item in OrderItem.objects.filter(order__user_id=request.user.id):
-        order_quantities[item.order_id] += item.quantity
-    for order in orders.object_list:
-        setattr(order, "quantity_total", order_quantities[order.id])
     context = {"orders": orders}
     return render(request, template, context)
+
+
+@login_required
+def invoice_resend_email(request, order_id):
+    """
+    Re-sends the order complete email for the given order and redirects
+    to the previous page.
+    """
+    try:
+        order = Order.objects.get_for_user(order_id, request)
+    except Order.DoesNotExist:
+        raise Http404
+    if request.method == "POST":
+        checkout.send_order_email(request, order)
+        msg = _("The order email for order ID %s has been re-sent" % order_id)
+        info(request, msg)
+        # Determine the URL to return the user to.
+        redirect_to = next_url(request)
+        if redirect_to is None:
+            if request.user.is_staff:
+                redirect_to = reverse("admin:shop_order_change",
+                    args=[order_id])
+            else:
+                redirect_to = reverse("shop_order_history")
+    return redirect(redirect_to)

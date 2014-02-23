@@ -1,4 +1,12 @@
-import urllib2
+from __future__ import unicode_literals
+from future.builtins import str
+
+try:
+    from urllib.request import Request, urlopen
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import Request, urlopen, URLError
+
 import locale
 
 from django.core.exceptions import ImproperlyConfigured
@@ -37,8 +45,8 @@ def process(request, order_form, order):
 
     from cartridge.shop.payment.paypal import COUNTRIES
 
-    class OrderForm(OrderForm):
-        def __init__(self,*args,**kwrds):
+    class MyOrderForm(OrderForm):
+        def __init__(self, *args, **kwargs):
             super(OrderForm, self).__init__(*args, **kwrds)
             billing_country = forms.Select(choices=COUNTRIES)
             shipping_country = forms.Select(choices=COUNTRIES)
@@ -111,13 +119,12 @@ def process(request, order_form, order):
     part3 = "&" + urlencode(trans['custShipData'])
     trans['postString'] = (part1 + urlencode(trans['transactionData']) +
                            part2 + part3)
-    conn = urllib2.Request(url=trans['connection'], data=trans['postString'])
+    request_args = {"url": trans['connection'], "data": trans['postString']}
     # useful for debugging transactions
     # print trans['postString']
     try:
-        f = urllib2.urlopen(conn)
-        all_results = f.read()
-    except urllib2.URLError:
+        all_results = urlopen(Request(**request_args)).read()
+    except URLError:
         raise CheckoutError("Could not talk to PayPal payment gateway")
     parsed_results = QueryDict(all_results)
     state = parsed_results['ACK']

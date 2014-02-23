@@ -1,7 +1,11 @@
 
+from __future__ import division, unicode_literals
+from future.builtins import range, zip
+
 from datetime import timedelta
 from decimal import Decimal
 from operator import mul
+from functools import reduce
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -62,7 +66,7 @@ class ShopTests(TestCase):
         Test creation of variations from options, and management of empty
         variations.
         """
-        total = reduce(mul, [len(v) for v in self._options.values()])
+        total = reduce(mul, [len(v) for v in list(self._options.values())])
         # Clear variations.
         self._product.variations.all().delete()
         self.assertEqual(self._product.variations.count(), 0)
@@ -116,7 +120,7 @@ class ShopTests(TestCase):
         # assign another option as a category filter. Check that no
         # products match the filters, then add the first option as a
         # category filter and check that the product is matched.
-        option_field, options = self._options.items()[0]
+        option_field, options = list(self._options.items())[0]
         option1, option2 = options[:2]
         # Variation with the first option.
         self._product.variations.create_from_options({option_field: [option1]})
@@ -184,7 +188,7 @@ class ShopTests(TestCase):
         form to add the variation, and posts it.
         """
         field_names = [f.name for f in ProductVariation.option_fields()]
-        data = dict(zip(field_names, variation.options()))
+        data = dict(list(zip(field_names, variation.options())))
         data["quantity"] = quantity
         self.client.post(variation.product.get_absolute_url(), data)
 
@@ -288,7 +292,7 @@ class ShopTests(TestCase):
                     discount.products.add(variation.product)
                 post_data = {"discount_code": code}
                 self.client.post(reverse("shop_cart"), post_data)
-                discount_total = self.client.session["discount_total"]
+                discount_total = Decimal(self.client.session["discount_total"])
                 if discount_type == "percent":
                     expected = TEST_PRICE / Decimal("100") * discount_value
                     if discount_target == "cart":
@@ -303,9 +307,9 @@ class ShopTests(TestCase):
                     cart = Cart.objects.from_request(self.client)
                     self._empty_cart(cart)
                     self._add_to_cart(invalid_variation, 1)
-                    self.client.post(reverse("shop_cart"), post_data)
-                    discount_total = self.client.session.get("discount_total")
-                    self.assertEqual(discount_total, None)
+                    r = self.client.post(reverse("shop_cart"), post_data)
+                    self.assertFormError(r, "discount_form", "discount_code",
+                                     "The discount code entered is invalid.")
 
     def test_order(self):
         """
@@ -325,7 +329,7 @@ class ShopTests(TestCase):
             "billing_detail_email": "example@example.com",
             "discount_code": "",
         }
-        for field_name, field in OrderForm(None, None).fields.items():
+        for field_name, field in list(OrderForm(None, None).fields.items()):
             value = field.choices[-1][1] if hasattr(field, "choices") else "1"
             data.setdefault(field_name, value)
         self.client.post(reverse("shop_checkout"), data)
