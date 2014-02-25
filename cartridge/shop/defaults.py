@@ -324,3 +324,43 @@ register_setting(
     editable=False,
     default=True,
 )
+
+register_setting(
+    name="SHOP_SHOW_SIGNUPLOGIN",
+    label=_("Show sign up and log in links"),
+    description="Show the links to sign up or log in. "
+        "Only affects the visibility of the links, not ability to sign up or log in.",
+    editable=False,
+    default=True,
+)
+
+register_setting(
+    name="SHOP_HIDE_BILLING_SHIPPING_FIELDS",
+    description=_("Sequence of columns to hide in billing and shipping."),
+    editable=False,
+    default=(),
+)
+
+register_setting(
+    name="SHOP_TOS_ON_CHECKOUT",
+    label=_("Show Terms of Service link on checkout."),
+    description="Show Terms of Service url and warning on last checkout page.",
+    editable=True,
+    default=False,
+)
+
+register_setting(
+    name="SHOP_TOS_URL",
+    label=_("Terms of Service url"),
+    description="Shown on last checkout page if SHOP_TOS_ON_CHECKOUT is enabled",
+    editable=True,
+    default="",
+)
+
+register_setting(
+    name="SHOP_ALWAYS_SAME_BILLING_SHIPPING",
+    label=_("Always same billing and shipping values."),
+    description="Do not query user for shipping values, always use billing values",
+    editable=False,
+    default=False,
+)

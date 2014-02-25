@@ -340,8 +340,10 @@ class OrderForm(FormsetForm, DiscountForm):
     class Meta:
         model = Order
         fields = ([f.name for f in Order._meta.fields if
-                   f.name.startswith("billing_detail") or
-                   f.name.startswith("shipping_detail")] +
+                   (f.name.startswith("billing_detail") or
+                   f.name.startswith("shipping_detail")) and
+                   f.name.replace("billing_detail_", "").replace("shipping_detail_", "")
+                   not in settings.SHOP_HIDE_BILLING_SHIPPING_FIELDS] +
                    ["additional_instructions", "discount_code"])
 
     def __init__(self, request, step, data=None, initial=None, errors=None):
@@ -407,6 +409,11 @@ class OrderForm(FormsetForm, DiscountForm):
         for field in filter(hidden_filter, self.fields):
             self.fields[field].widget = forms.HiddenInput()
             self.fields[field].required = False
+        if settings.SHOP_ALWAYS_SAME_BILLING_SHIPPING:
+            for field in self.fields:
+                if field == 'same_billing_shipping' or field.startswith('shipping_'):
+                    self.fields[field].widget = forms.HiddenInput()
+                    self.fields[field].required = False
 
         # Set year choices for cc expiry, relative to the current year.
         year = now().year
@@ -449,6 +456,12 @@ class OrderForm(FormsetForm, DiscountForm):
         """
         if self._checkout_errors:
             raise forms.ValidationError(self._checkout_errors)
+        # Validate necessary fields are filled since hideable fields are
+        # blank=True in the Order model
+        for field in self.fields:
+            if (field.startswith("billing_detail") or (field.startswith("shipping_detail") and not settings.SHOP_ALWAYS_SAME_BILLING_SHIPPING)) and len(self.data[field]) == 0 and field.replace("billing_detail_", "").replace("shipping_detail_", "") not in settings.SHOP_HIDE_BILLING_SHIPPING_FIELDS:
+                self.errors[field] = [_("This field is required.")]
+                raise forms.ValidationError(_("Please fill out all fields."))
         return super(OrderForm, self).clean()
 
 
@@ -576,3 +589,10 @@ class SpecialPriceAdminForm(forms.ModelForm):
     def clean(self):
         return self.cleaned_data
         
+        
+class ReservableProductAvailabilityAdminForm(forms.ModelForm):
+    """
+    Reservable product availabilities admin form.
+    """
+    def clean(self):
+        return self.cleaned_data

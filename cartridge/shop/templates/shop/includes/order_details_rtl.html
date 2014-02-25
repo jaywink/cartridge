@@ -13,7 +13,9 @@
 <table width="100%" border="1" cellspacing="0" cellpadding="10">
 <tr>
     <th align="right" width="50%">{% trans "Billing Details" %}</th>
+    {% if not hide_shipping %}
     <th align="right" width="50%">{% trans "Shipping Details" %}</th>
+    {% endif %}
 </tr>
 <tr>
     <td valign="top" align="right">
@@ -23,6 +25,7 @@
             {% endfor %}
         </table>
     </td>
+    {% if not hide_shipping %}
     <td valign="top" align="right">
         <table border="0" align="right">
             {% for field, value in order_shipping_detail_fields %}
@@ -30,6 +33,7 @@
             {% endfor %}
         </table>
     </td>
+    {% endif %}
 </tr>
 </table>
 

@@ -25,6 +25,7 @@ from cartridge.shop.forms import (AddProductForm, CartItemFormSet,
                                   DiscountForm, OrderForm)
 from cartridge.shop.models import Product, ProductVariation, Order
 from cartridge.shop.models import ReservableProduct, OrderItem
+from cartridge.shop.models import ReservableProduct
 from cartridge.shop.models import DiscountCode
 from cartridge.shop.utils import recalculate_cart, sign
 
@@ -84,10 +85,7 @@ def product(request, slug, template="shop/product.html",
     if settings.SHOP_USE_RELATED_PRODUCTS:
         related = product.related_products.published(for_user=request.user)
     if product.content_model == 'reservableproduct':
-        # update reservations
         reservable = ReservableProduct.objects.get(id=product.id)
-        #reservable.reservations.all().delete()
-        #reservable.update_from_hook()
         reservations = reservable.reservations.all()
     else:
         reservations = None
@@ -105,6 +103,10 @@ def product(request, slug, template="shop/product.html",
         "reservable": reservable
     }
     templates = [u"shop/%s.html" % str(product.slug), template]
+	# Check for a template matching the page's content model.
+    if product.content_model is not None:
+        templates.insert(0, u"shop/products/%s.html" % product.content_model)
+    templates.append(template)
     return render(request, templates, context)
 
 
@@ -338,7 +340,13 @@ def checkout_steps(request, form_class=OrderForm):
     context = {"CHECKOUT_STEP_FIRST": step == checkout.CHECKOUT_STEP_FIRST,
                "CHECKOUT_STEP_LAST": step == checkout.CHECKOUT_STEP_LAST,
                "step_title": step_vars["title"], "step_url": step_vars["url"],
-               "steps": checkout.CHECKOUT_STEPS, "step": step, "form": form}
+               "steps": checkout.CHECKOUT_STEPS, "step": step,
+               "hide_shipping": settings.SHOP_ALWAYS_SAME_BILLING_SHIPPING,
+			   "form": form}
+    if settings.SHOP_TOS_ON_CHECKOUT and step == len(checkout.CHECKOUT_STEPS):
+        context['tos_url'] = settings.SHOP_TOS_URL
+    else:
+        context['tos_url'] = False
     return render(request, template, context)
 
 

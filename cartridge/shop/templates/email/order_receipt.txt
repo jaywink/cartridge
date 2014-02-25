@@ -13,10 +13,12 @@
 {{ field }}: {{ value }}
 {% endfor %}
 
+{% if not hide_shipping %}
 {% trans "Shipping Details:" %}
 {% for field, value in order_shipping_detail_fields %}
 {{ field }}: {{ value }}
 {% endfor %}
+{% endif %}
 
 {% trans "Items Ordered:" %}
 {% for item in order_items %}

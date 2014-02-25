@@ -7,6 +7,17 @@ function isAvailable(date) {
     } else {
         curDate.setDate(date.getDate());
     }
+    if (avails.length) {
+        var available = false;
+        for (var i=0; i<avails.length; i++) {
+            if (curDate <= avails[i].to_date && curDate >= avails[i].from_date) {
+                available = true;
+            }
+        }
+        if (available == false) {
+            return [false, "not available"];
+        }
+    }
     if (typeof reservedDays[curDate.getFullYear()] !== 'undefined' &&
             typeof reservedDays[curDate.getFullYear()][curDate.getMonth()+1] !== 'undefined' ){
         if (reservedDays[curDate.getFullYear()][curDate.getMonth()+1].indexOf(curDate.getDate()) > -1) {
@@ -20,6 +31,7 @@ function isAvailable(date) {
 }
 
 var datepickerTarget = '#id_from_date';
+var avails = [];
 
 function switchDatepickerTarget() {
     if (datepickerTarget == '#id_from_date')
@@ -69,6 +81,14 @@ function parseReservationDates() {
 $(document).ready(function(){    
     
     $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+    
+    for (var i=0; i<availabilities.length; i++) {
+        // parse availability json to dates
+        var a = availabilities[i];
+        var from = new Date(a.from_date[0], a.from_date[1]-1, a.from_date[2]);
+        var to = new Date(a.to_date[0], a.to_date[1]-1, a.to_date[2]);
+        avails.push({ from_date: from, to_date: to });
+    }
     
     $("#datepicker-reservations").datepicker({
         beforeShowDay: isAvailable,

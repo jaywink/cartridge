@@ -46,7 +46,9 @@ from cartridge.shop.forms import ProductAdminForm, ProductVariationAdminForm
 from cartridge.shop.forms import ProductVariationAdminFormset
 from cartridge.shop.forms import DiscountAdminForm, ImageWidget, MoneyWidget
 from cartridge.shop.forms import SpecialPriceAdminForm
+from cartridge.shop.forms import ReservableProductAvailabilityAdminForm
 from cartridge.shop.models import Category, Product, ProductImage, ReservableProduct
+from cartridge.shop.models import ReservableProduct, ReservableProductAvailability
 from cartridge.shop.models import ProductVariation, ProductOption, Order
 from cartridge.shop.models import OrderItem, Sale, DiscountCode
 from cartridge.shop.models import SpecialPrice
@@ -407,6 +409,12 @@ class SpecialPriceAdmin(admin.ModelAdmin):
     form = SpecialPriceAdminForm
     
 
+class ReservableProductAvailabilityAdmin(admin.ModelAdmin):
+    list_display = ("id", "from_date", "to_date", "product")
+    list_editable = ("from_date", "to_date", "product")
+    form = ReservableProductAvailabilityAdminForm
+    
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ReservableProduct, ProductAdmin)
@@ -416,3 +424,4 @@ admin.site.register(Order, OrderAdmin)
 admin.site.register(Sale, SaleAdmin)
 admin.site.register(DiscountCode, DiscountCodeAdmin)
 admin.site.register(SpecialPrice, SpecialPriceAdmin)
+admin.site.register(ReservableProductAvailability, ReservableProductAvailabilityAdmin)

@@ -22,9 +22,11 @@
     <div class="panel-body">
     <h3>{% trans "Shipping Details" %}</h3>
     <ul class="list-unstyled">
+		{% if not hide_shipping %}
         {% for field, value in form.shipping_detail_fields.values %}
             <li><label>{{ field }}:</label> {{ value }}</li>
         {% endfor %}
+		{% endif %}
         {% for field, value in form.additional_instructions_field.values %}
             <li><label>{{ field }}:</label> {{ value }}</li>
         {% endfor %}

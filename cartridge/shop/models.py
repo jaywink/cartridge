@@ -123,6 +123,26 @@ class SpecialPrice(models.Model):
         verbose_name_plural = _("Special Prices")
 
 
+class SpecialPrice(models.Model):
+    """
+    Special prices for products. Either periods or type based.
+    """
+    
+    SPECIAL_TYPES = (
+        ('PER', 'Period of days'),      # NOT IMPLEMENTED YET
+        ('WKD', 'Weekend (Friday-Saturday)'),
+    )
+    
+    #TODO: add title field
+    price_change = fields.MoneyField(_("Price change"))
+    special_type = models.CharField(max_length=3, choices=SPECIAL_TYPES)
+    product = models.ForeignKey("Product", related_name="specialprices")
+    
+    class Meta:
+        verbose_name = _("Special Price")
+        verbose_name_plural = _("Special Prices")
+
+
 class Product(Displayable, Priced, RichText, AdminThumbMixin):
     """
     Container model for a product that stores information common to
@@ -250,21 +270,48 @@ class ReservableProduct(Product):
             if not reservation.date.month in output[reservation.date.year].keys():
                 output[reservation.date.year][reservation.date.month] = []
             output[reservation.date.year][reservation.date.month].append(reservation.date.day);
-        print "reservations_to_js",output
+        return json.dumps(output)
+        
+    def availabilities_to_json(self):
+        output = []
+        for availability in self.availabilities.all():
+            output.append(
+                { 'from_date': [availability.from_date.year, availability.from_date.month, availability.from_date.day],
+                  'to_date': [availability.to_date.year, availability.to_date.month, availability.to_date.day]
+                }
+            )
         return json.dumps(output)
     
     def is_available(self, from_date, to_date):
         """
-        Check reservations to see if available
+        Check reservations and availabilities to see if available
         """
         to_date += datetime.timedelta(days=-1)
         reservations = self.reservations.filter(date__range=(from_date, to_date))
         if len(reservations) > 0:
             return False
-        else:
-            return True
+        # availabilities = self.availabilities.all()
+        # for availability in availabilities:
+        #     if not availability.from_date <= from_date <= availability.to_date or not availability.from_date <= to_date <= availability.to_date:
+        #         return False
+        return True
         
-        
+
+class ReservableProductAvailability(models.Model):
+    """
+    Reservable product availability.
+    If not defined, product is available always. Define
+    one or more periods here to restrict availability.
+    """
+    
+    from_date = models.DateField(_("From date"))
+    to_date = models.DateField(_("To date"))
+    product = models.ForeignKey("ReservableProduct", related_name="availabilities")
+    
+    def __unicode__(self):
+        return str(self.from_date) + "-" + str(self.to_date)
+     
+
 class ReservableProductReservation(models.Model):
     """
     Reservation
@@ -541,21 +588,21 @@ class Order(models.Model):
 
     billing_detail_first_name = CharField(_("First name"), max_length=100)
     billing_detail_last_name = CharField(_("Last name"), max_length=100)
-    billing_detail_street = CharField(_("Street"), max_length=100)
-    billing_detail_city = CharField(_("City/Suburb"), max_length=100)
-    billing_detail_state = CharField(_("State/Region"), max_length=100)
-    billing_detail_postcode = CharField(_("Zip/Postcode"), max_length=10)
-    billing_detail_country = CharField(_("Country"), max_length=100)
-    billing_detail_phone = CharField(_("Phone"), max_length=20)
+    billing_detail_street = CharField(_("Street"), max_length=100, blank=True)
+    billing_detail_city = CharField(_("City/Suburb"), max_length=100, blank=True)
+    billing_detail_state = CharField(_("State/Region"), max_length=100, blank=True)
+    billing_detail_postcode = CharField(_("Zip/Postcode"), max_length=10, blank=True)
+    billing_detail_country = CharField(_("Country"), max_length=100, blank=True)
+    billing_detail_phone = CharField(_("Phone"), max_length=20, blank=True)
     billing_detail_email = models.EmailField(_("Email"))
     shipping_detail_first_name = CharField(_("First name"), max_length=100)
     shipping_detail_last_name = CharField(_("Last name"), max_length=100)
-    shipping_detail_street = CharField(_("Street"), max_length=100)
-    shipping_detail_city = CharField(_("City/Suburb"), max_length=100)
-    shipping_detail_state = CharField(_("State/Region"), max_length=100)
-    shipping_detail_postcode = CharField(_("Zip/Postcode"), max_length=10)
-    shipping_detail_country = CharField(_("Country"), max_length=100)
-    shipping_detail_phone = CharField(_("Phone"), max_length=20)
+    shipping_detail_street = CharField(_("Street"), max_length=100, blank=True)
+    shipping_detail_city = CharField(_("City/Suburb"), max_length=100, blank=True)
+    shipping_detail_state = CharField(_("State/Region"), max_length=100, blank=True)
+    shipping_detail_postcode = CharField(_("Zip/Postcode"), max_length=10, blank=True)
+    shipping_detail_country = CharField(_("Country"), max_length=100, blank=True)
+    shipping_detail_phone = CharField(_("Phone"), max_length=20, blank=True)
     additional_instructions = models.TextField(_("Additional instructions"),
                                                blank=True)
     time = models.DateTimeField(_("Time"), auto_now_add=True, null=True)
@@ -645,7 +692,8 @@ class Order(models.Model):
                         if reservation:
                             reservation_order = ReservableProductOrderReservation(order=self, reservation=reservation)
                             reservation_order.save()
-                variation.update_stock(item.quantity * -1)
+                else:
+                    variation.update_stock(item.quantity * -1)
                 variation.product.actions.purchased()
         # create reservations in external hook for reservable products (if any)
         if self.has_reservables:
@@ -657,9 +705,8 @@ class Order(models.Model):
                 else:
                     if variation.product.content_model == 'reservableproduct':
                         # create reservation via hook (if any)
-                        print "** trying to reserve via hook:", item.from_date, item.to_date, self.id
-                        external_order_id = reservableproduct.reserve_via_hook(item.from_date, item.to_date, self.id)
-                        print "** external_order_id", external_order_id
+                        # external_order_id = reservableproduct.reserve_via_hook(item.from_date, item.to_date, self.id)
+                        external_order_id = -1
                         if external_order_id == -1 or not external_order_id:
                             # External hook reported an error
                             # TODO: send extra notice to shop admins to process this manually
@@ -831,7 +878,6 @@ class Cart(models.Model):
                     reserved_days = ReservableProductCartReservation.objects.filter(cart=self)
                     for reservation in reserved_days:
                         print reservation.reservation.product,variation.product
-                        #print reservation.reservation.date
                         reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
                         if reservableproduct == reservation.reservation.product:
                             print reservation.reservation.date
