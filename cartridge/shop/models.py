@@ -320,8 +320,17 @@ class ReservableProductReservation(models.Model):
     date = models.DateField(_("Date"))
     product = models.ForeignKey("ReservableProduct", related_name="reservations")
     
+    def get_order_url(self):
+        try:
+            return self.in_orders.all()[0].order.change_url()
+        except:
+            return '-'
+    
     def __unicode__(self):
         return str(self.date)
+        
+    class Meta:
+        ordering = ['-date']
         
 
 class ReservableProductCartReservation(models.Model):
@@ -333,6 +342,9 @@ class ReservableProductCartReservation(models.Model):
     reservation = models.ForeignKey("ReservableProductReservation", related_name="in_carts")
     last_updated = models.DateTimeField(_("Last updated"), auto_now=True)
     
+    class Meta:
+        ordering = ['-last_updated']
+        
 
 class ReservableProductOrderReservation(models.Model):
     """
@@ -748,6 +760,9 @@ class Order(models.Model):
             if item.from_date and item.to_date:
                 return True
         return False
+
+    def change_url(self):
+        return '<a href="'+reverse("admin:shop_order_change", args=[self.id])+'">'+str(self)+'</a>'
 
 
 class Cart(models.Model):

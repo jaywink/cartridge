@@ -31,6 +31,7 @@ are then pushed back onto the one variation for the product.
 from copy import deepcopy
 
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from django.db.models import ImageField
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -47,8 +48,10 @@ from cartridge.shop.forms import ProductVariationAdminFormset
 from cartridge.shop.forms import DiscountAdminForm, ImageWidget, MoneyWidget
 from cartridge.shop.forms import SpecialPriceAdminForm
 from cartridge.shop.forms import ReservableProductAvailabilityAdminForm
-from cartridge.shop.models import Category, Product, ProductImage, ReservableProduct
+from cartridge.shop.models import Category, Product, ProductImage
 from cartridge.shop.models import ReservableProduct, ReservableProductAvailability
+from cartridge.shop.models import ReservableProductReservation
+from cartridge.shop.models import ReservableProductCartReservation
 from cartridge.shop.models import ProductVariation, ProductOption, Order
 from cartridge.shop.models import OrderItem, Sale, DiscountCode
 from cartridge.shop.models import SpecialPrice
@@ -413,7 +416,38 @@ class ReservableProductAvailabilityAdmin(admin.ModelAdmin):
     list_display = ("id", "from_date", "to_date", "product")
     list_editable = ("from_date", "to_date", "product")
     form = ReservableProductAvailabilityAdminForm
+
+
+class InOrdersListFilter(SimpleListFilter):
+    title = "In orders"
+    parameter_name = "in_orders"
     
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+    
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(in_orders__isnull=False) 
+        if self.value() == 'no':
+            return queryset.filter(in_orders__isnull=True) 
+    
+
+class ReservableProductReservationAdmin(admin.ModelAdmin):
+    list_display = ("id", "date", "product", "order_url")
+    date_hierarchy = "date"
+    list_filter = (InOrdersListFilter,)
+    
+    def order_url(self, instance):
+        return instance.get_order_url()
+    order_url.allow_tags = True
+
+
+class ReservableProductCartReservationAdmin(admin.ModelAdmin):
+    list_display = ("id", "cart", "reservation", "last_updated")
+        
 
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Product, ProductAdmin)
@@ -425,3 +459,5 @@ admin.site.register(Sale, SaleAdmin)
 admin.site.register(DiscountCode, DiscountCodeAdmin)
 admin.site.register(SpecialPrice, SpecialPriceAdmin)
 admin.site.register(ReservableProductAvailability, ReservableProductAvailabilityAdmin)
+admin.site.register(ReservableProductReservation, ReservableProductReservationAdmin)
+admin.site.register(ReservableProductCartReservation, ReservableProductCartReservationAdmin)
