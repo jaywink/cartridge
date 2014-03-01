@@ -23,7 +23,7 @@
 <table class="table table-striped">
     <thead>
 	<tr>
-		<th colspan="2" class="left">{% trans "Item" %}</th>
+		<th class="left">{% trans "Item" %}</th>
 		<th>{% trans "Unit Price" %}</th>
 		<th class="center">{% trans "Qty" %}</th>
         {% if request.cart.has_reservables %}
@@ -59,22 +59,24 @@
 	{% endfor %}
     {% if request.cart.special_prices %}
         <tr>
-            <th colspan="4" class="left">Specials</th>
-            <th colspan="3" class="left">Product</th>
-            <th class="center">Price adj</th>
+            <th colspan="4" class="left">{% trans 'Specials' %}</th>
+            <th class="center">{% trans 'Product' %}</th>
+            <th>{% trans 'Modification' %}</th>
+            <th></th>
         </tr>
         {% for special in request.cart.special_prices %}
             <tr>
                 {% if special.1 == 'WKD' %}
                     <td colspan="4" class="left">{% trans 'Weekend' %}</td>
                 {% endif %}
-                <td colspan="3" class="left">{{ special.0 }}</td>
-                <td class="center">{{ special.2|currency }}</td>
+                <td class="center">{{ special.0 }}</td>
+                <td>{{ special.2|currency }}</td>
+                <td></td>
             </tr>
         {% endfor %}
     {% endif %}
 	<tr>
-		<td colspan="5">{% order_totals %}</td>
+		<td colspan="6">{% order_totals %}</td>
 		<td>&nbsp;</td>
 	</tr>
 	</tbody>
