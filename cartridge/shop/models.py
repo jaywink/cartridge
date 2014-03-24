@@ -234,7 +234,7 @@ class ReservableProduct(Product):
         Update reservations from hook
         """
         hook = __import__(self.hook_module)
-        manage = hook.reservation.Manage()
+        manage = hook.reservation.Manage(self)
         today = datetime.date.today()
         month = today.month
         year = today.year
