@@ -23,6 +23,7 @@
             {% for field, value in order_billing_detail_fields %}
             <tr><td>{{ field }}:&nbsp;&nbsp;&nbsp;</td><td>{{ value }}</td></tr>
             {% endfor %}
+            <tr><td>{% trans "Additional instructions" %}:&nbsp;&nbsp;&nbsp;</td><td>{{ order.additional_instructions }}</td></tr>
         </table>
     </td>
     {% if not hide_shipping %}
