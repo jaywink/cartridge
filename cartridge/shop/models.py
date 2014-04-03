@@ -109,34 +109,16 @@ class SpecialPrice(models.Model):
     """
     
     SPECIAL_TYPES = (
-        ('PER', 'Period of days'),      # NOT IMPLEMENTED YET
+        ('PER', 'Period of days'),
         ('WKD', 'Weekend (Friday-Saturday)'),
     )
     
-    #TODO: add title field
+    title = models.CharField(_("Name"), default="Special price", blank=True)
     price_change = fields.MoneyField(_("Price change"))
     special_type = models.CharField(max_length=3, choices=SPECIAL_TYPES)
     product = models.ForeignKey("Product", related_name="specialprices")
-    
-    class Meta:
-        verbose_name = _("Special Price")
-        verbose_name_plural = _("Special Prices")
-
-
-class SpecialPrice(models.Model):
-    """
-    Special prices for products. Either periods or type based.
-    """
-    
-    SPECIAL_TYPES = (
-        ('PER', 'Period of days'),      # NOT IMPLEMENTED YET
-        ('WKD', 'Weekend (Friday-Saturday)'),
-    )
-    
-    #TODO: add title field
-    price_change = fields.MoneyField(_("Price change"))
-    special_type = models.CharField(max_length=3, choices=SPECIAL_TYPES)
-    product = models.ForeignKey("Product", related_name="specialprices")
+    from_date = models.DateField(_("Date from, if date range"), null=True, blank=True)
+    to_date = models.DateField(_("Date to, if date range"), null=True, blank=True)
     
     class Meta:
         verbose_name = _("Special Price")
