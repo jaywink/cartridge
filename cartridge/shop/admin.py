@@ -406,8 +406,9 @@ class DiscountCodeAdmin(admin.ModelAdmin):
 
 
 class SpecialPriceAdmin(admin.ModelAdmin):
-    list_display = ("id", "price_change", "special_type", "product")
-    list_editable = ("price_change", "special_type", "product")
+    list_display_links = ("title",)
+    list_display = ("title", "price_change", "special_type", "product", "from_date", "to_date")
+    list_editable = ("price_change", "from_date", "to_date")
     formfield_overrides = {MoneyField: {"widget": MoneyWidget}}
     form = SpecialPriceAdminForm
     

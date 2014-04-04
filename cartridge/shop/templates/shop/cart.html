@@ -66,9 +66,7 @@
         </tr>
         {% for special in request.cart.special_prices %}
             <tr>
-                {% if special.1 == 'WKD' %}
-                    <td colspan="4" class="left">{% trans 'Weekend' %}</td>
-                {% endif %}
+                <td colspan="4" class="left">{{ special.3 }}</td>
                 <td class="center">{{ special.0 }}</td>
                 <td>{{ special.2|currency }}</td>
                 <td></td>

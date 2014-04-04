@@ -113,7 +113,7 @@ class SpecialPrice(models.Model):
         ('WKD', 'Weekend (Friday-Saturday)'),
     )
     
-    title = models.CharField(_("Name"), default="Special price", blank=True)
+    title = models.CharField(_("Name"), default="Special price", blank=True, max_length=200)
     price_change = fields.MoneyField(_("Price change"))
     special_type = models.CharField(max_length=3, choices=SPECIAL_TYPES)
     product = models.ForeignKey("Product", related_name="specialprices")
@@ -864,27 +864,36 @@ class Cart(models.Model):
         items_done = []
         for item in self:
             variation = ProductVariation.objects.get(sku=item.sku)
-            specials = SpecialPrice.objects.filter(product=variation.product)
             if variation.product.content_model == 'reservableproduct' and item in items_done:
                 # only do each item once for reservables
                 continue
+            specials = SpecialPrice.objects.filter(product=variation.product, special_type='WKD')
             for special in specials:
                 # for reservables we check against days in reserved period
                 # for other products we check against purchasing date
                 if variation.product.content_model == 'reservableproduct':
                     reserved_days = ReservableProductCartReservation.objects.filter(cart=self)
                     for reservation in reserved_days:
-                        print reservation.reservation.product,variation.product
                         reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
                         if reservableproduct == reservation.reservation.product:
-                            print reservation.reservation.date
-                            if special.special_type == 'WKD' and reservation.reservation.date.isoweekday() in [5,6]:
+                            if reservation.reservation.date.isoweekday() in [5,6]:
                                 # reservation occurs on a weekend date
-                                result.append((variation.product.title, 'WKD', special.price_change))
+                                result.append((variation.product.title, 'WKD', special.price_change, _("Weekend")))
                 else:
-                    if special.special_type == 'WKD' and date.today().isoweekday() in [5,6]:
+                    if date.today().isoweekday() in [5,6]:
                         # now occurs on a weekend date
-                        result.append((variation.product.title, 'WKD', special.price_change))
+                        result.append((variation.product.title, 'WKD', special.price_change, _("Weekend")))
+            if variation.product.content_model == 'reservableproduct':
+                reserved_days = ReservableProductCartReservation.objects.filter(cart=self)
+                for reservation in reserved_days:
+                    reservableproduct = ReservableProduct.objects.get(product_ptr=variation.product.id)
+                    if reservableproduct == reservation.reservation.product:
+                        try:
+                            special = SpecialPrice.objects.get(product=variation.product, special_type='PER', from_date__lte=reservation.reservation.date, to_date__gte=reservation.reservation.date)
+                            result.append((variation.product.title, 'PER', special.price_change, special.title))
+                        except SpecialPrice.DoesNotExist:
+                            pass
+                        
             items_done.append(item)
         return result
     
