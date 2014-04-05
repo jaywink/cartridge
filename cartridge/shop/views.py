@@ -25,9 +25,11 @@ from cartridge.shop.forms import (AddProductForm, CartItemFormSet,
                                   DiscountForm, OrderForm)
 from cartridge.shop.models import Product, ProductVariation, Order
 from cartridge.shop.models import ReservableProduct, OrderItem
-from cartridge.shop.models import ReservableProduct
+from cartridge.shop.models import ReservableProduct, SpecialPrice
 from cartridge.shop.models import DiscountCode
 from cartridge.shop.utils import recalculate_cart, sign
+
+from datetime import date
 
 
 # Set up checkout handlers.
@@ -90,6 +92,11 @@ def product(request, slug, template="shop/product.html",
     else:
         reservations = None
         reservable = None
+    timespecials = product.specialprices.filter(special_type='PER', to_date__gte=date.today())
+    try:
+        weekendspecial = product.specialprices.get(special_type='WKD')
+    except SpecialPrice.DoesNotExist:
+        weekendspecial = False
     context = {
         "product": product,
         "editable_obj": product,
@@ -100,7 +107,9 @@ def product(request, slug, template="shop/product.html",
         "related_products": related,
         "add_product_form": add_product_form,
         "reservations": reservations,
-        "reservable": reservable
+        "reservable": reservable,
+        "timespecials": timespecials,
+        "weekendspecial": weekendspecial,
     }
     templates = [u"shop/%s.html" % str(product.slug), template]
 	# Check for a template matching the page's content model.

@@ -59,6 +59,8 @@ $(document).ready(function() {
 
 {% block main %}
 
+<h1>{{ product.title }}</h1>
+
 {% if images %}
 {% spaceless %}
 <ul id="product-images-large" class="list-unstyled list-inline">
@@ -91,8 +93,8 @@ $(document).ready(function() {
 {% endeditable %}
 
 {% if product.available and has_available_variations %}
-<h4>Hinnat:</h4>
-<ul id="variations" class="list-unstyled">
+<h4>{% trans "Price per night" %}:</h4>
+<ul id="variations" class="list-unstyled" style="margin-left: 30px;">
     {% for variation in variations %}
     <li id="variation-{{ variation.sku }}"
         {% if not variation.default %}style="display:none;"{% endif %}>
@@ -101,7 +103,25 @@ $(document).ready(function() {
                 <span class="old-price">{{ variation.unit_price|currency }}</span>
                 {% trans "On sale:" %}
             {% endif %}
-            <span class="price">{{ variation.price|currency }} / yö</span>
+            <ul>
+            <li class="price">{{ variation.price|currency }} &nbsp;-&nbsp; {% trans "Normal price" %}</li>
+            {% if weekendspecial %}
+                <li class="price">{{ variation.price|add:weekendspecial.price_change|currency }} &nbsp;-&nbsp; {% trans "Weekend (Fri-Sat or Sat-Sun) price" %}</li>
+            {% endif %}
+            {% for timespecial in timespecials %}
+                <li class="special-price">
+                    {{ timespecial.title }}
+                    ({% trans "period between" %}
+                    {{ timespecial.from_date|date }} - {{ timespecial.to_date|date }})
+                    <ul>
+                        <li>{{ variation.price|add:timespecial.price_change|currency }}</li>
+                        {% if weekendspecial %}
+                            <li>{{ variation.price|add:timespecial.price_change|add:weekendspecial.price_change|currency }} {% trans "weekend nights" %}</li>
+                        {% endif %}
+                    </ul>
+                </li>
+            {% endfor %}
+            </ul>
         {% else %}
             {% if has_available_variations %}
             <span class="error-msg">
