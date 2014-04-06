@@ -344,7 +344,7 @@ class OrderForm(FormsetForm, DiscountForm):
                    f.name.startswith("shipping_detail")) and
                    f.name.replace("billing_detail_", "").replace("shipping_detail_", "")
                    not in settings.SHOP_HIDE_BILLING_SHIPPING_FIELDS] +
-                   ["additional_instructions", "discount_code"])
+                   ["additional_instructions", "discount_code", "persons_adults", "persons_childs"])
 
     def __init__(self, request, step, data=None, initial=None, errors=None):
         """

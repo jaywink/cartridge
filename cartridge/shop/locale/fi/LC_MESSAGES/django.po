@@ -4,14 +4,14 @@
 #
 # Translators:
 # Markus Törnqvist <mjt@fadconsulting.com>, 2014.
-# Jason Robinson <mail@jasonrobinson.me>, 2014
+# Jason Robinson <mail@jasonrobinson.me>, 2014.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Cartridge\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-04-05 17:36+0300\n"
-"PO-Revision-Date: 2014-04-05 18:49+0300\n"
+"POT-Creation-Date: 2014-04-06 14:02+0300\n"
+"PO-Revision-Date: 2014-04-06 14:04+0300\n"
 "Last-Translator: Jason Robinson <mail@jasonrobinson.me>\n"
 "Language-Team: Finnish (http://www.transifex.com/projects/p/cartridge/"
 "language/fi/)\n"
@@ -331,7 +331,7 @@ msgstr ""
 "Valittua määrää ei ole tällä hetkellä saatavilla.Varattavan tuotteen määrää "
 "ostoskorissa ei voi muokata. Poista varaus kokonaisena."
 
-#: forms.py:45 models.py:914
+#: forms.py:45 models.py:917
 msgid "Quantity"
 msgstr "Määrä"
 
@@ -339,7 +339,7 @@ msgstr "Määrä"
 msgid "The discount code entered is invalid."
 msgstr "Annettu alennuskoodi ei kelpaa."
 
-#: forms.py:304 models.py:1152
+#: forms.py:304 models.py:1155
 msgid "Free shipping"
 msgstr "Maksuton toimitus"
 
@@ -400,7 +400,7 @@ msgstr "Vain yksi variaatio voi olla valittu kerrallaan."
 msgid "Please enter a value for only one type of reduction."
 msgstr "Anna vain yhden alennuksen arvo."
 
-#: models.py:56 models.py:915
+#: models.py:56 models.py:918
 msgid "Unit price"
 msgstr "Kappalehinta"
 
@@ -477,7 +477,7 @@ msgstr ""
 msgid "Product"
 msgstr "Tuote"
 
-#: models.py:155 models.py:514 models.py:1015
+#: models.py:155 models.py:514 models.py:1018
 msgid "Products"
 msgstr "Tuotteet"
 
@@ -489,11 +489,11 @@ msgstr "Varattava tuote"
 msgid "Reservable Products"
 msgstr "Varattavat tuotteet"
 
-#: models.py:289 models.py:919 templates/shop/cart.html:30
+#: models.py:289 models.py:922 templates/shop/cart.html:30
 msgid "From date"
 msgstr "Tulopäivä"
 
-#: models.py:290 models.py:920 templates/shop/cart.html:31
+#: models.py:290 models.py:923 templates/shop/cart.html:31
 msgid "To date"
 msgstr "Lähtöpäivä"
 
@@ -501,11 +501,11 @@ msgstr "Lähtöpäivä"
 msgid "Date"
 msgstr "Päivämäärä"
 
-#: models.py:325 models.py:338 models.py:752
+#: models.py:325 models.py:338 models.py:755
 msgid "Last updated"
 msgstr "Viimeksi päivitetty"
 
-#: models.py:352 models.py:913 management/commands/product_db.py:35
+#: models.py:352 models.py:916 management/commands/product_db.py:35
 msgid "Description"
 msgstr "Kuvaus"
 
@@ -533,7 +533,7 @@ msgstr "Oletus"
 msgid "Featured Image"
 msgstr "Ajankohtainen kuva"
 
-#: models.py:519 models.py:1051
+#: models.py:519 models.py:1054
 msgid "Sale"
 msgstr "Alennusmyynti"
 
@@ -625,7 +625,7 @@ msgstr "Vero yhteensä"
 msgid "Item total"
 msgstr "Tuotteita yhteensä"
 
-#: models.py:610 models.py:1174
+#: models.py:610 models.py:1177
 msgid "Discount code"
 msgstr "Alennuskoodi"
 
@@ -645,80 +645,88 @@ msgstr "Tapahtuman tunniste"
 msgid "Status"
 msgstr "Tila"
 
-#: models.py:628
+#: models.py:620
+msgid "Number of adults"
+msgstr "Aikuisten määrä"
+
+#: models.py:621
+msgid "Number of children"
+msgstr "Lasten määrä"
+
+#: models.py:631
 msgid "Order"
 msgstr "Tilaus"
 
-#: models.py:629
+#: models.py:632
 msgid "Orders"
 msgstr "Tilaukset"
 
-#: models.py:735 templates/admin/shop/order/change_form.html:10
+#: models.py:738 templates/admin/shop/order/change_form.html:10
 #: templates/shop/complete.html:80
 msgid "Download PDF invoice"
 msgstr "Lataa PDF-lähete"
 
-#: models.py:881 models.py:885
+#: models.py:884 models.py:888
 msgid "Weekend"
 msgstr "Viikonloppu"
 
-#: models.py:916
+#: models.py:919
 msgid "Total price"
 msgstr "Hinta yhteensä"
 
-#: models.py:981
+#: models.py:984
 msgid "External Order ID"
 msgstr ""
 
-#: models.py:1012 management/commands/product_db.py:33
+#: models.py:1015 management/commands/product_db.py:33
 msgid "Title"
 msgstr "Otsikko"
 
-#: models.py:1013
+#: models.py:1016
 msgid "Active"
 msgstr "Aktiivinen"
 
-#: models.py:1018
+#: models.py:1021
 msgid "Categories"
 msgstr "Kategoriat"
 
-#: models.py:1019
+#: models.py:1022
 msgid "Reduce by amount"
 msgstr "Vähennä määrällä"
 
-#: models.py:1020
+#: models.py:1023
 msgid "Reduce by percent"
 msgstr "Vähennä prosenteilla"
 
-#: models.py:1023
+#: models.py:1026
 msgid "Reduce to amount"
 msgstr "Vähennä määrään"
 
-#: models.py:1024
+#: models.py:1027
 msgid "Valid from"
 msgstr "Voimassa alkaen"
 
-#: models.py:1025
+#: models.py:1028
 msgid "Valid to"
 msgstr "Voimassa päättyen"
 
-#: models.py:1052
+#: models.py:1055
 msgid "Sales"
 msgstr "Alennusmyynnit"
 
-#: models.py:1150
+#: models.py:1153
 msgid "Code"
 msgstr "Koodi"
 
-#: models.py:1151
+#: models.py:1154
 msgid "Minimum total purchase"
 msgstr "Ostosten vähimmäishinta"
 
-#: models.py:1153
+#: models.py:1156
 msgid "Uses remaining"
 msgstr "Käyttökertoja jäljellä"
 
-#: models.py:1154
+#: models.py:1157
 msgid ""
 "If you wish to limit the number of times a code may be used, set this value. "
 "It will be decremented upon each use."
@@ -726,7 +734,7 @@ msgstr ""
 "Jos haluat rajoittaa montako kertaa alennuskoodia voi käyttää, aseta tämä "
 "arvo. Sitä vähennetään joka käyttökerralla."
 
-#: models.py:1175
+#: models.py:1178
 msgid "Discount codes"
 msgstr "Alennuskoodit"
 
@@ -868,7 +876,7 @@ msgid ""
 "attributes for each variation individually."
 msgstr ""
 
-#: templates/admin/shop/product/change_list.html:8
+#: templates/admin/shop/product/change_list.html:16
 msgid "Add"
 msgstr "Lisää"
 
@@ -969,6 +977,10 @@ msgstr "Laskutustiedot"
 #: templates/shop/billing_shipping.html:38
 msgid "Delivery Details"
 msgstr "Toimitustiedot"
+
+#: templates/shop/billing_shipping.html:43
+msgid "To provide bedding we need the amount of visitors"
+msgstr "Lakanoiden lukumäärän vuoksi tarvitsemme vieraiden lukumäärän"
 
 #: templates/shop/cart.html:4 templates/shop/cart.html.py:5
 #: templates/shop/cart.html:10

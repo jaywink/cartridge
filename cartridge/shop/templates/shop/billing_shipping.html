@@ -39,7 +39,16 @@ If you have an existing account or would like to create one, please
     {% endif %}
 	{% fields_for form.same_billing_shipping_field %}
 	<div id="shipping_fields">{% fields_for form.shipping_detail_fields %}</div>
-	{% fields_for form.additional_instructions_field %}
+    {% if request.cart.has_reservables %}
+        {% trans 'To provide bedding we need the amount of visitors' %}
+        <p>
+        <ol>
+        {% fields_for form.persons_adults_field %}
+        {% fields_for form.persons_childs_field %}
+        </ol>
+        </p>
+    {% endif %}
+    {% fields_for form.additional_instructions_field %}
     {% fields_for form.remember_field %}
 </fieldset>
 
