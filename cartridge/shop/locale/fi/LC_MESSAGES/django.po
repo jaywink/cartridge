@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Cartridge\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-04-06 14:02+0300\n"
+"POT-Creation-Date: 2014-04-20 22:31+0300\n"
 "PO-Revision-Date: 2014-04-06 14:04+0300\n"
 "Last-Translator: Jason Robinson <mail@jasonrobinson.me>\n"
 "Language-Team: Finnish (http://www.transifex.com/projects/p/cartridge/"
@@ -979,8 +979,8 @@ msgid "Delivery Details"
 msgstr "Toimitustiedot"
 
 #: templates/shop/billing_shipping.html:43
-msgid "To provide bedding we need the amount of visitors"
-msgstr "Lakanoiden lukumäärän vuoksi tarvitsemme vieraiden lukumäärän"
+msgid "Please fill in the amount of visitors"
+msgstr "Täytäthän vieraiden lukumäärän kiitos"
 
 #: templates/shop/cart.html:4 templates/shop/cart.html.py:5
 #: templates/shop/cart.html:10
