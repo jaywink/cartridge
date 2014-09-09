@@ -617,8 +617,8 @@ class Order(models.Model):
                             choices=settings.SHOP_ORDER_STATUS_CHOICES,
                             default=settings.SHOP_ORDER_STATUS_CHOICES[0][0])
 
-    persons_adults = models.IntegerField(_("Number of adults"), default=0, blank=True)
-    persons_childs = models.IntegerField(_("Number of children"), default=0, blank=True)
+    persons_adults = models.IntegerField(_("Number of adults"), default=0, blank=True, null=True)
+    persons_childs = models.IntegerField(_("Number of children"), default=0, blank=True, null=True)
 
     objects = managers.OrderManager()
 
