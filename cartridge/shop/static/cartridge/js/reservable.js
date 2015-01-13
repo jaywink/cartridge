@@ -1,12 +1,5 @@
 
-function isAvailable(date) {
-    var curDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    if (datepickerTarget == '#id_to_date') {
-        // allow selecting next day
-        curDate.setDate(date.getDate() - 1);
-    } else {
-        curDate.setDate(date.getDate());
-    }
+function checkIsAvailable(curDate) {
     if (avails.length) {
         var available = false;
         for (var i=0; i<avails.length; i++) {
@@ -30,29 +23,40 @@ function isAvailable(date) {
     }
 }
 
-var datepickerTarget = '#id_from_date';
-var avails = [];
-
-function switchDatepickerTarget() {
-    if (datepickerTarget == '#id_from_date')
-        datepickerTarget = '#id_to_date';
-    else
-        datepickerTarget = '#id_from_date';
+function isAvailableFrom(date) {
+    var curDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    curDate.setDate(date.getDate());
+    return checkIsAvailable(curDate);
 }
+
+function isAvailableTo(date) {
+    var curDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    var fromInput = $('input#id_from_date').val().split('.');
+    var fromDate = new Date(parseInt(fromInput[2]), parseInt(fromInput[1])-1, parseInt(fromInput[0]));
+    curDate.setDate(date.getDate() - 1);
+    if (curDate < fromDate) {
+        return [false, "end date must be after start"];
+    }
+    return checkIsAvailable(curDate);
+}
+
+var avails = [];
 
 function validateAddToCartButton(dates) {
     if ($('input#id_from_date').val().length > 0 && $('input#id_to_date').val().length > 0) {
-        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
+        $('.form-actions input[name="add_cart"]').attr('disabled', false);
     } else {
-        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+        $('.form-actions input[name="add_cart"]').attr('disabled', true);
+        $("#chosen-dates-container").hide();
         return;
     }
     // to date cannot be earlier or same as from date
     if (dates[1] <= dates[0]) {
-        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+        $('.form-actions input[name="add_cart"]').attr('disabled', true);
+        $("#chosen-dates-container").hide();
         return;
     } else {
-        $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
+        $('.form-actions input[name="add_cart"]').attr('disabled', false);
     }
     // make sure no reservations between dates
     curDay = dates[0];
@@ -63,12 +67,15 @@ function validateAddToCartButton(dates) {
         if (curDay >= lastDay) {
             break;
         }
-        if (! isAvailable(curDay)[0]) {
-            $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
+        if (! isAvailableFrom(curDay)[0]) {
+            $('.form-actions input[name="add_cart"]').attr('disabled', true);
+            $("#chosen-dates-container").hide();
             return;
         }
     }
-    $('.form-actions-wrap input[name="add_cart"]').attr('disabled', false);
+    $('.form-actions input[name="add_cart"]').attr('disabled', false);
+    $("#chosen-dates").html($('input#id_from_date').val() + " - " + $('input#id_to_date').val())
+    $("#chosen-dates-container").show(200);
 }
 
 function parseReservationDates() {
@@ -78,10 +85,10 @@ function parseReservationDates() {
     return [fromDate, toDate];
 }
 
-$(document).ready(function(){    
-    
-    $('.form-actions-wrap input[name="add_cart"]').attr('disabled', true);
-    
+$(document).ready(function(){
+
+    $('.form-actions input[name="add_cart"]').attr('disabled', true);
+
     for (var i=0; i<availabilities.length; i++) {
         // parse availability json to dates
         var a = availabilities[i];
@@ -89,17 +96,14 @@ $(document).ready(function(){
         var to = new Date(a.to_date[0], a.to_date[1]-1, a.to_date[2]);
         avails.push({ from_date: from, to_date: to });
     }
-    
-    $("#datepicker-reservations").datepicker({
-        beforeShowDay: isAvailable,
-        onSelect: function(selectedDate) {
-            $(datepickerTarget).val(selectedDate);
-            switchDatepickerTarget();
-            var dates = parseReservationDates();
-            validateAddToCartButton(dates);
-        },
+
+    // Make sure date inputs are empty on page load
+    $("#id_from_date").val("");
+    $("#id_to_date").val("");
+
+    var datepickerOpts = {
         minDate: 0,
-        numberOfMonths: 2,
+        numberOfMonths: 1,
         // copied finnish localization from jquery language file here - couldn't get it to work otherwise :P
         closeText: 'Sulje',
         prevText: '&#xAB;Edellinen',
@@ -118,6 +122,22 @@ $(document).ready(function(){
         isRTL: false,
         showMonthAfterYear: false,
         yearSuffix: ''
-    });
-    $("#datepicker-reservations").datepicker("show");
+    }
+    $("#datepicker-from").datepicker($.extend({}, {
+        beforeShowDay: isAvailableFrom,
+        onSelect: function(selectedDate) {
+            $("#id_from_date").val(selectedDate);
+            var dates = parseReservationDates();
+            validateAddToCartButton(dates);
+            $("#datepicker-to").datepicker("refresh");
+        }
+    }, datepickerOpts));
+    $("#datepicker-to").datepicker($.extend({}, {
+        beforeShowDay: isAvailableTo,
+        onSelect: function(selectedDate) {
+            $("#id_to_date").val(selectedDate);
+            var dates = parseReservationDates();
+            validateAddToCartButton(dates);
+        }
+    }, datepickerOpts));
 });

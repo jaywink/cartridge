@@ -40,7 +40,7 @@ $(document).ready(function() {
 
 {% block extra_head %}
 <script>var variations = {{ variations_json|safe }};</script>
-<script> 
+<script>
     var reservedDays = {{ reservable.reservations_to_json|safe }};
     var availabilities = {{ reservable.availabilities_to_json|safe }};
 </script>
@@ -137,8 +137,20 @@ $(document).ready(function() {
 
 <form method="post" id="add-cart" class="shop-form">
     {% fields_for add_product_form %}
-	<div id="datepicker-reservations" style="margin-left: 30px;"></div>
-    <div class="form-actions clearfix">
+    <legend style="margin-top: 30px;">Valitse tulo- ja lähtöpäivämäärä</legend>
+    <div class="pull-left" style="width: 40%; display: inline;">
+        <label>Tulopäivä</label>
+    	<div id="datepicker-from" style="margin-left: 30px;"></div>
+    </div>
+    <div class="pull-left" style="width: 40%; display: inline;">
+        <label>Lähtöpäivä</label>
+        <div id="datepicker-to" style="margin-left: 30px;"></div>
+    </div>
+    <div class="clearfix" id="chosen-dates-container" style="display: none; clear: both; padding-top: 30px;">
+        <legend>Valitut päivämäärät</legend>
+        <strong><div class="alert alert-info" id="chosen-dates"></div></strong>
+    </div>
+    <div class="form-actions clearfix" style="clear: both;">
         <input type="submit" class="btn btn-primary btn-lg pull-right" name="add_cart" value="{% trans "Reserve" %}">
         {% if settings.SHOP_USE_WISHLIST %}
         <input type="submit" class="btn btn-default btn-lg pull-left" name="add_wishlist" value="{% trans "Save for later" %}">

@@ -89,8 +89,8 @@ class AddProductForm(forms.Form):
                     self.fields[name] = field
         if self._product.content_model == 'reservableproduct':
             # ReservableProduct needs from/to dates and does not need quantity
-            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label="Tulopäivä")
-            self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.DateInput(format="%d.%m.%Y"), label="Lähtöpäivä")
+            self.fields["from_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.HiddenInput())
+            self.fields["to_date"] = forms.DateField(input_formats=["%d.%m.%Y"], widget=forms.HiddenInput())
             self.fields["quantity"] = forms.IntegerField(min_value=1, initial=1, widget=forms.HiddenInput())
 
     def clean(self):
@@ -583,8 +583,8 @@ class SpecialPriceAdminForm(forms.ModelForm):
     """
     def clean(self):
         return self.cleaned_data
-        
-        
+
+
 class ReservableProductAvailabilityAdminForm(forms.ModelForm):
     """
     Reservable product availabilities admin form.
