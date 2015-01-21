@@ -107,19 +107,19 @@ class SpecialPrice(models.Model):
     """
     Special prices for products. Either periods or type based.
     """
-    
+
     SPECIAL_TYPES = (
         ('PER', 'Period of days'),
         ('WKD', 'Weekend (Friday-Saturday)'),
     )
-    
+
     title = models.CharField(_("Name"), default="Special price", blank=True, max_length=200)
     price_change = fields.MoneyField(_("Price change"))
     special_type = models.CharField(max_length=3, choices=SPECIAL_TYPES)
     product = models.ForeignKey("Product", related_name="specialprices")
     from_date = models.DateField(_("Date from, if date range"), null=True, blank=True)
     to_date = models.DateField(_("Date to, if date range"), null=True, blank=True)
-    
+
     class Meta:
         verbose_name = _("Special Price")
         verbose_name_plural = _("Special Prices")
@@ -204,13 +204,13 @@ class ReservableProduct(Product):
     """
     Subclassed product for reservable types.
     """
-    
+
     class Meta:
         verbose_name = _("Reservable Product")
         verbose_name_plural = _("Reservable Products")
-    
+
     hook_module = "reservation.reservation"
-    
+
     def update_from_hook(self):
         """
         Update reservations from hook
@@ -233,7 +233,7 @@ class ReservableProduct(Product):
                     if datetime.date(year, month, day) >= today:
                         reservation = ReservableProductReservation(date=datetime.date(year, month, day), product=self)
                         reservation.save()
-                        
+
     def reserve_via_hook(self, from_date, to_date, infotext):
         """
         Create reservation via hook in external system.
@@ -243,7 +243,7 @@ class ReservableProduct(Product):
         hook = __import__(self.hook_module)
         manage = hook.reservation.Manage()
         return manage.reserve(from_date.strftime('%d.%m.%Y'), to_date.strftime('%d.%m.%Y'), str(infotext))
-                    
+
     def reservations_to_json(self):
         output = {}
         for reservation in self.reservations.all():
@@ -253,7 +253,7 @@ class ReservableProduct(Product):
                 output[reservation.date.year][reservation.date.month] = []
             output[reservation.date.year][reservation.date.month].append(reservation.date.day);
         return json.dumps(output)
-        
+
     def availabilities_to_json(self):
         output = []
         for availability in self.availabilities.all():
@@ -263,7 +263,7 @@ class ReservableProduct(Product):
                 }
             )
         return json.dumps(output)
-    
+
     def is_available(self, from_date, to_date):
         """
         Check reservations and availabilities to see if available
@@ -277,7 +277,7 @@ class ReservableProduct(Product):
         #     if not availability.from_date <= from_date <= availability.to_date or not availability.from_date <= to_date <= availability.to_date:
         #         return False
         return True
-        
+
 
 class ReservableProductAvailability(models.Model):
     """
@@ -285,57 +285,69 @@ class ReservableProductAvailability(models.Model):
     If not defined, product is available always. Define
     one or more periods here to restrict availability.
     """
-    
+
     from_date = models.DateField(_("From date"))
     to_date = models.DateField(_("To date"))
     product = models.ForeignKey("ReservableProduct", related_name="availabilities")
-    
+
     def __unicode__(self):
         return str(self.from_date) + "-" + str(self.to_date)
-     
+
 
 class ReservableProductReservation(models.Model):
     """
     Reservation
     """
-    
+
     date = models.DateField(_("Date"))
     product = models.ForeignKey("ReservableProduct", related_name="reservations")
-    
+
     def get_order_url(self):
         try:
             return self.in_orders.all()[0].order.change_url()
         except:
             return '-'
-    
+
     def __unicode__(self):
         return str(self.date)
-        
+
     class Meta:
         ordering = ['-date']
-        
+
 
 class ReservableProductCartReservation(models.Model):
     """
     Reservation in cart
     """
-    
+
     cart = models.ForeignKey("Cart", related_name="reservations")
     reservation = models.ForeignKey("ReservableProductReservation", related_name="in_carts")
     last_updated = models.DateTimeField(_("Last updated"), auto_now=True)
-    
+
     class Meta:
         ordering = ['-last_updated']
-        
+
+    def delete(self):
+        """Also delete linked ReservableProductReservation."""
+        reservation = self.reservation
+        super(ReservableProductCartReservation, self).delete()
+        reservation.delete()
+
 
 class ReservableProductOrderReservation(models.Model):
     """
     Reservation in order
     """
-    
+
     order = models.ForeignKey("Order", related_name="reservations")
     reservation = models.ForeignKey("ReservableProductReservation", related_name="in_orders")
     last_updated = models.DateTimeField(_("Last updated"), auto_now=True)
+
+    def delete(self):
+        """Also delete linked ReservableProductReservation."""
+        reservation = self.reservation
+        super(ReservableProductOrderReservation, self).delete()
+        reservation.delete()
 
 
 class ProductImage(Orderable):
@@ -739,7 +751,7 @@ class Order(models.Model):
         return "<a href='%s?format=pdf'>%s</a>" % (url, text)
     invoice.allow_tags = True
     invoice.short_description = ""
-    
+
     def has_reservables(self):
         for item in self.items.all():
             if item.from_date and item.to_date:
@@ -858,7 +870,7 @@ class Cart(models.Model):
             if item.sku in discount_skus:
                 total += discount.calculate(item.unit_price) * item.quantity
         return total
-        
+
     def special_prices(self):
         """
         Get all the special prices that affect this cart.
@@ -896,10 +908,10 @@ class Cart(models.Model):
                             result.append((variation.product.title, 'PER', special.price_change, special.title))
                         except SpecialPrice.DoesNotExist:
                             pass
-                        
+
             items_done.append(item)
         return result
-    
+
     def has_reservables(self):
         for item in self:
             if item.from_date and item.to_date:
@@ -917,7 +929,7 @@ class SelectedProduct(models.Model):
     quantity = models.IntegerField(_("Quantity"), default=0)
     unit_price = fields.MoneyField(_("Unit price"), default=Decimal("0"))
     total_price = fields.MoneyField(_("Total price"), default=Decimal("0"))
-    
+
     # for reservable products
     from_date = models.DateField(_("From date"), null=True)
     to_date = models.DateField(_("To date"), null=True)
@@ -927,7 +939,7 @@ class SelectedProduct(models.Model):
 
     def __unicode__(self):
         return ""
-        
+
     def is_reserved(self):
         if from_day and to_day:
             return True
@@ -955,7 +967,7 @@ class CartItem(SelectedProduct):
 
     def get_absolute_url(self):
         return self.url
-        
+
     def delete(self, *args, **kwargs):
         """
         Overriden default delete method to cover reservables
@@ -978,10 +990,10 @@ class OrderItem(SelectedProduct):
     A selected product in a completed order.
     """
     order = models.ForeignKey("Order", related_name="items")
-    
-    # External order ID - if order is saved via external hook, 
+
+    # External order ID - if order is saved via external hook,
     # for example a reservation
-    external_order_id = models.IntegerField(_("External Order ID"), 
+    external_order_id = models.IntegerField(_("External Order ID"),
         null=True, blank=True)
 
 

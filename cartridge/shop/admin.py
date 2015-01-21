@@ -338,11 +338,21 @@ def address_pairs(fields):
     return pairs
 
 
+def cancel_order(modeladmin, request, queryset):
+    """Delete order by looping queryset so reservations are removed too, if any."""
+    for order in queryset:
+        for order_reservation in order.reservations.all():
+            order_reservation.reservation.delete()
+        order.delete()
+cancel_order.short_description = "Cancel order"
+
+
 class OrderAdmin(admin.ModelAdmin):
 
     class Media:
         css = {"all": ("cartridge/css/admin/order.css",)}
 
+    actions = [cancel_order]
     ordering = ("status", "-id")
     list_display = ("id", "billing_name", "total", "time", "status",
                     "transaction_id", "invoice")
@@ -411,7 +421,7 @@ class SpecialPriceAdmin(admin.ModelAdmin):
     list_editable = ("price_change", "from_date", "to_date")
     formfield_overrides = {MoneyField: {"widget": MoneyWidget}}
     form = SpecialPriceAdminForm
-    
+
 
 class ReservableProductAvailabilityAdmin(admin.ModelAdmin):
     list_display = ("id", "from_date", "to_date", "product")
@@ -422,25 +432,25 @@ class ReservableProductAvailabilityAdmin(admin.ModelAdmin):
 class InOrdersListFilter(SimpleListFilter):
     title = "In orders"
     parameter_name = "in_orders"
-    
+
     def lookups(self, request, model_admin):
         return (
             ('yes', 'Yes'),
             ('no', 'No'),
         )
-    
+
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(in_orders__isnull=False) 
+            return queryset.filter(in_orders__isnull=False)
         if self.value() == 'no':
-            return queryset.filter(in_orders__isnull=True) 
-    
+            return queryset.filter(in_orders__isnull=True)
+
 
 class ReservableProductReservationAdmin(admin.ModelAdmin):
     list_display = ("id", "date", "product", "order_url")
     date_hierarchy = "date"
     list_filter = (InOrdersListFilter,)
-    
+
     def order_url(self, instance):
         return instance.get_order_url()
     order_url.allow_tags = True
@@ -448,7 +458,7 @@ class ReservableProductReservationAdmin(admin.ModelAdmin):
 
 class ReservableProductCartReservationAdmin(admin.ModelAdmin):
     list_display = ("id", "cart", "reservation", "last_updated")
-        
+
 
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Product, ProductAdmin)
