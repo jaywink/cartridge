@@ -327,12 +327,6 @@ class ReservableProductCartReservation(models.Model):
     class Meta:
         ordering = ['-last_updated']
 
-    def delete(self):
-        """Also delete linked ReservableProductReservation."""
-        reservation = self.reservation
-        super(ReservableProductCartReservation, self).delete()
-        reservation.delete()
-
 
 class ReservableProductOrderReservation(models.Model):
     """
