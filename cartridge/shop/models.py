@@ -892,7 +892,7 @@ class Cart(models.Model):
                                 # reservation occurs on a weekend date
                                 result.append((variation.product.title, 'WKD', special.price_change, _("Weekend")))
                 else:
-                    if date.today().isoweekday() in [5,6]:
+                    if datetime.date.today().isoweekday() in [5,6]:
                         # now occurs on a weekend date
                         result.append((variation.product.title, 'WKD', special.price_change, _("Weekend")))
             if variation.product.content_model == 'reservableproduct':
@@ -938,7 +938,7 @@ class SelectedProduct(models.Model):
         return ""
 
     def is_reserved(self):
-        if from_day and to_day:
+        if self.from_day and self.to_day:
             return True
         else:
             return False
