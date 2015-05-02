@@ -38,9 +38,9 @@ $(function() {$('.middle :input:visible:enabled:first').focus();});
         {% if request.cart.has_items %}
             <div class="form-actions">
                 {% if step == steps|length %}
-                    <input type="submit" class="btn btn-lg btn-primary pull-right" value="{% trans "Next" %}">
-                {% else %}
                     <input type="submit" class="btn btn-lg btn-primary pull-right" value="{% trans "Complete" %}">
+                {% else %}
+                    <input type="submit" class="btn btn-lg btn-primary pull-right" value="{% trans "Next" %}">
                 {% endif %}
                 {% if not CHECKOUT_STEP_FIRST %}
                     <input type="submit" class="btn btn-lg btn-default pull-left" name="back" value="{% trans "Back" %}">
