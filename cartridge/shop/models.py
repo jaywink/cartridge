@@ -16,7 +16,8 @@ from django.db.models import CharField, Q
 from django.db.models.base import ModelBase
 from django.dispatch import receiver
 from django.utils.timezone import now
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import (ugettext, ugettext_lazy as _,
+                                      pgettext_lazy as __)
 
 try:
     from django.utils.encoding import force_text
@@ -27,7 +28,7 @@ except ImportError:
 from mezzanine.conf import settings
 from mezzanine.core.fields import FileField
 from mezzanine.core.managers import DisplayableManager
-from mezzanine.core.models import Displayable, RichText, Orderable
+from mezzanine.core.models import Displayable, RichText, Orderable, SiteRelated
 from mezzanine.generic.fields import RatingField
 from mezzanine.pages.models import Page
 from mezzanine.utils.models import AdminThumbMixin, upload_to
@@ -149,6 +150,8 @@ class Product(Displayable, Priced, RichText, AdminThumbMixin):
     objects = DisplayableManager()
 
     admin_thumb_field = "image"
+
+    search_fields = {"variations__sku": 100}
 
     class Meta:
         verbose_name = _("Product")
@@ -584,7 +587,7 @@ class Category(Page, RichText):
         return products
 
 
-class Order(models.Model):
+class Order(SiteRelated):
 
     billing_detail_first_name = CharField(_("First name"), max_length=100)
     billing_detail_last_name = CharField(_("Last name"), max_length=100)
@@ -634,8 +637,8 @@ class Order(models.Model):
                       "discount_code", "tax_type", "tax_total")
 
     class Meta:
-        verbose_name = _("Order")
-        verbose_name_plural = _("Orders")
+        verbose_name = __("commercial meaning", "Order")
+        verbose_name_plural = __("commercial meaning", "Orders")
         ordering = ("-id",)
 
     def __unicode__(self):
@@ -889,7 +892,7 @@ class Cart(models.Model):
                                 # reservation occurs on a weekend date
                                 result.append((variation.product.title, 'WKD', special.price_change, _("Weekend")))
                 else:
-                    if date.today().isoweekday() in [5,6]:
+                    if datetime.date.today().isoweekday() in [5,6]:
                         # now occurs on a weekend date
                         result.append((variation.product.title, 'WKD', special.price_change, _("Weekend")))
             if variation.product.content_model == 'reservableproduct':
@@ -935,7 +938,7 @@ class SelectedProduct(models.Model):
         return ""
 
     def is_reserved(self):
-        if from_day and to_day:
+        if self.from_day and self.to_day:
             return True
         else:
             return False
