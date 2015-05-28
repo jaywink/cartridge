@@ -3,7 +3,7 @@ from mezzanine.conf import settings
 from mezzanine.core.translation import (TranslatedDisplayable,
                                         TranslatedRichText)
 from cartridge.shop.models import (Category, Product, ProductOption,
-                                   ProductImage, ProductVariation)
+                                   ProductImage, ProductVariation, ReservableProduct)
 
 
 class TranslatedProduct(TranslatedDisplayable, TranslatedRichText):
@@ -27,6 +27,7 @@ class TranslatedCategory(TranslatedRichText):
     fields = ()
 
 translator.register(Product, TranslatedProduct)
+translator.register(ReservableProduct, TranslatedProduct)
 translator.register(ProductImage, TranslatedProductImage)
 translator.register(ProductOption, TranslatedProductOption)
 translator.register(ProductVariation, TranslatedProductVariation)

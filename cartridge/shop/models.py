@@ -190,7 +190,7 @@ class Product(Displayable, Priced, RichText, AdminThumbMixin):
             self.image = default.image.file.name
         self.save()
 
-@python_2_unicode_compatible
+
 class ReservableProduct(Product):
     """
     Subclassed product for reservable types.
@@ -270,7 +270,6 @@ class ReservableProduct(Product):
         return True
 
 
-@python_2_unicode_compatible
 class ReservableProductAvailability(models.Model):
     """
     Reservable product availability.
@@ -286,7 +285,6 @@ class ReservableProductAvailability(models.Model):
         return str(self.from_date) + "-" + str(self.to_date)
 
 
-@python_2_unicode_compatible
 class ReservableProductReservation(models.Model):
     """
     Reservation
@@ -308,7 +306,6 @@ class ReservableProductReservation(models.Model):
         ordering = ['-date']
 
 
-@python_2_unicode_compatible
 class ReservableProductCartReservation(models.Model):
     """
     Reservation in cart
@@ -322,7 +319,6 @@ class ReservableProductCartReservation(models.Model):
         ordering = ['-last_updated']
 
 
-@python_2_unicode_compatible
 class ReservableProductOrderReservation(models.Model):
     """
     Reservation in order
