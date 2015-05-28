@@ -45,8 +45,7 @@ class CartManager(Manager):
                 request.session.modified = True
             except KeyError:
                 pass
-            from cartridge.shop.utils import EmptyCart
-            cart = EmptyCart(request)
+            cart = self.model(last_updated=now())
         return cart
 
     def expiry_time(self):

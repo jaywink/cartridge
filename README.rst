@@ -141,6 +141,15 @@ project::
     $ git commit -am "A message describing what you changed."
     $ git push origin your-new-branch-name
 
+.. note::
+
+    Cartridge's development branch often relies on features that exist
+    in Mezzanine's development branch, but haven't yet made it into an
+    official release. To install Mezzanine's development version in your
+    environment, run::
+
+       $ pip install --upgrade git+https://github.com/stephenmcd/mezzanine.git#egg=Mezzanine
+
 
 Language Translations
 =====================
@@ -153,6 +162,22 @@ internationalization`_ methodology. Translations are managed on the
 internationalization`_ methodology for more information on creating
 translations and using them.
 
+Third-party Modules
+===================
+
+The following modules have been developed outside of Cartridge. If you
+have developed a module to integrate with Mezzanine or Cartridge, and
+would like it listed in the documentation, send an email to the
+`mezzanine-users`_ mailing list. You can also add modules to the
+`Mezzanine Grid on djangopackages.com`_.
+
+* `cartridge_braintree`_ - Payment processor for `Braintree`_.
+* `cartridge-external-payment`_ - Allows payment on an external
+  provider platform.
+* `cartridge-tax`_ - Implements a handful of sales tax models.
+* `cartridge-stripe`_ - Alternative payment backend for `Stripe`_.
+* `cartridge-pinpayments`_ - `PIN`_ payments integration.
+
 Donating
 ========
 
@@ -163,11 +188,11 @@ Support
 =======
 
 To report a security issue, please send an email privately to
-`security@jupo.org`_. This gives us a chance to fix the issue and
+`core-team@mezzaninecms.com`_. This gives us a chance to fix the issue and
 create an official release prior to the issue being made
 public.
 
-For all other Mezzanine support, the primary channel is the
+For all other Cartridge support, the primary channel is the
 `mezzanine-users`_ mailing list. Questions, comments, and all related
 discussions take place here amongst knowledgeable members of the
 community.
@@ -183,8 +208,8 @@ reproducable bug, then please try the mailing list first.
 Finally, feel free to drop by the `#mezzanine IRC channel`_ on
 `Freenode`_, for a chat!
 
-Communications in all Mezzanine spaces are expected to conform
-to the `Django Code of Conduct`_.
+Communications in all Cartridge and Mezzanine spaces are expected to
+conform to the `Django Code of Conduct`_.
 
 Sites Using Cartridge
 =====================
@@ -215,6 +240,8 @@ Sites Using Cartridge
 * `Engineered Arts <https://www.engineeredarts.co.uk>`_
 * `Lipman Art <https://lipmanart.com/>`_
 * `ZHackers <https://www.zhackers.com>`_
+* `Potrillo al Pie <http://potrilloalpie.com/>`_
+* `You Name It <http://you-name-it.net>`_
 
 
 .. _`Django`: http://djangoproject.com/
@@ -234,8 +261,20 @@ Sites Using Cartridge
 .. _`Bootstrap CSS guidelines`: https://github.com/twbs/bootstrap/blob/master/CONTRIBUTING.md#css
 .. _`Django Code of Conduct`: https://www.djangoproject.com/conduct/
 .. _`Transiflex`: https://www.transifex.com/projects/p/cartridge/
-.. _`security@jupo.org`: mailto:security@jupo.org?subject=Mezzanine+Security+Issue
+.. _`core-team@mezzaninecms.com`: mailto:core-team@mezzaninecms.com?subject=Mezzanine+Security+Issue
 .. _`#mezzanine IRC channel`: irc://freenode.net/mezzanine
 .. _`Freenode`: http://freenode.net
 .. _`Django's internationalization`: https://docs.djangoproject.com/en/dev/topics/i18n/translation/
 .. _`virtualenvwrapper`: http://www.doughellmann.com/projects/virtualenvwrapper
+.. _`Mezzanine Grid on djangopackages.com`: http://www.djangopackages.com/grids/g/mezzanine/
+.. _`Braintree`: https://www.braintreepayments.com/
+.. _`Stripe`: https://stripe.com
+.. _`PIN`: https://pin.net.au/
+
+.. THIRD PARTY LIBS
+
+.. _`cartridge_braintree`: https://github.com/molokov/cartridge_braintree
+.. _`cartridge-external-payment`: https://github.com/thomasWajs/cartridge-external-payment
+.. _`cartridge-tax`: https://github.com/kenbolton/cartridge-tax
+.. _`cartridge-stripe`: https://github.com/readevalprint/cartridge-stripe
+.. _`cartridge-pinpayments`: https://github.com/molokov/cartridge-pinpayments

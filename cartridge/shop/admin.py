@@ -31,16 +31,14 @@ are then pushed back onto the one variation for the product.
 from copy import deepcopy
 
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
 from django.db.models import ImageField
-from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 
 from mezzanine.conf import settings
-from mezzanine.core.admin import DisplayableAdmin, TabularDynamicInlineAdmin
+from mezzanine.core.admin import (DisplayableAdmin,
+                                  TabularDynamicInlineAdmin,
+                                  BaseTranslationModelAdmin)
 from mezzanine.pages.admin import PageAdmin
-from mezzanine.utils.urls import admin_url
 
 from cartridge.shop.fields import MoneyField
 from cartridge.shop.forms import ProductAdminForm, ProductVariationAdminForm
@@ -55,6 +53,7 @@ from cartridge.shop.models import ReservableProductCartReservation
 from cartridge.shop.models import ProductVariation, ProductOption, Order
 from cartridge.shop.models import OrderItem, Sale, DiscountCode
 from cartridge.shop.models import SpecialPrice
+from cartridge.shop.views import HAS_PDF
 
 
 # Lists of field names.
@@ -267,8 +266,8 @@ class ProductAdmin(DisplayableAdmin):
                              if request.POST.getlist(f)])
             # Create a list of image IDs that have been marked to delete.
             deleted_images = [request.POST.get(f.replace("-DELETE", "-id"))
-                              for f in request.POST if f.startswith("images-")
-                              and f.endswith("-DELETE")]
+                for f in request.POST
+                if f.startswith("images-") and f.endswith("-DELETE")]
 
             # Create new variations for selected options.
             self._product.variations.create_from_options(options)
@@ -291,6 +290,23 @@ class ProductAdmin(DisplayableAdmin):
             # variation to the product.
             self._product.copy_default_variation()
 
+            # Save every translated fields from ``ProductOption`` into
+            # the required ``ProductVariation``
+            if settings.USE_MODELTRANSLATION:
+                from django.utils.datastructures import SortedDict
+                from modeltranslation.utils import (build_localized_fieldname
+                                                    as _loc)
+                for opt_name in options:
+                    for opt_value in options[opt_name]:
+                        opt_obj = ProductOption.objects.get(type=opt_name[6:],
+                                                            name=opt_value)
+                        params = {opt_name: opt_value}
+                        for var in self._product.variations.filter(**params):
+                            for code in SortedDict(settings.LANGUAGES):
+                                setattr(var, _loc(opt_name, code),
+                                        getattr(opt_obj, _loc('name', code)))
+                            var.save()
+
     def change_view(self, request, object_id, extra_context=None):
         """
         As in Mezzanine's ``Page`` model, check ``product.get_content_model()``
@@ -310,7 +326,7 @@ class ProductAdmin(DisplayableAdmin):
             extra_context=extra_context)
 
 
-class ProductOptionAdmin(admin.ModelAdmin):
+class ProductOptionAdmin(BaseTranslationModelAdmin):
     ordering = ("type", "name")
     list_display = ("type", "name")
     list_display_links = ("type",)
@@ -346,6 +362,11 @@ def cancel_order(modeladmin, request, queryset):
         order.delete()
 cancel_order.short_description = "Cancel order"
 
+order_list_display = ("id", "billing_name", "total", "time", "status",
+                      "transaction_id")
+if HAS_PDF:
+    order_list_display += ("invoice",)
+
 
 class OrderAdmin(admin.ModelAdmin):
 
@@ -354,8 +375,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     actions = [cancel_order]
     ordering = ("status", "-id")
-    list_display = ("id", "billing_name", "total", "time", "status",
-                    "transaction_id", "invoice")
+    list_display = order_list_display
     list_editable = ("status",)
     list_filter = ("status", "time")
     list_display_links = ("id", "billing_name",)
@@ -373,6 +393,12 @@ class OrderAdmin(admin.ModelAdmin):
              ("discount_total", "discount_code"), "item_total",
             ("total", "status"), "transaction_id")}),
     )
+
+    def change_view(self, *args, **kwargs):
+        if kwargs.get("extra_context", None) is None:
+            kwargs["extra_context"] = {}
+        kwargs["extra_context"]["has_pdf"] = HAS_PDF
+        return super(OrderAdmin, self).change_view(*args, **kwargs)
 
 
 class SaleAdmin(admin.ModelAdmin):

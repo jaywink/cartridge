@@ -12,18 +12,15 @@ import json
 from django.core.urlresolvers import reverse
 from django.db import models, connection
 from django.db.models.signals import m2m_changed
-from django.db.models import CharField, Q
+from django.db.models import CharField, Q, F
 from django.db.models.base import ModelBase
 from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import (ugettext, ugettext_lazy as _,
                                       pgettext_lazy as __)
 
-try:
-    from django.utils.encoding import force_text
-except ImportError:
-    # Backward compatibility for Py2 and Django < 1.5
-    from django.utils.encoding import force_unicode as force_text
+from django.utils.encoding import force_text
+from django.utils.encoding import python_2_unicode_compatible
 
 from mezzanine.conf import settings
 from mezzanine.core.fields import FileField
@@ -36,16 +33,6 @@ from mezzanine.utils.models import AdminThumbMixin, upload_to
 from cartridge.shop import fields, managers
 import cartridge.shop.utils as utils
 from cartridge.shop.utils import clear_session
-
-
-class F(models.F):
-    """
-    Django 1.4's F objects don't support true division, which
-    we need for Python 3.x. This should be removed when we
-    drop support for Django 1.4.
-    """
-    def __truediv__(self, other):
-        return self._combine(other, self.DIV, False)
 
 
 class Priced(models.Model):
@@ -203,6 +190,7 @@ class Product(Displayable, Priced, RichText, AdminThumbMixin):
             self.image = default.image.file.name
         self.save()
 
+@python_2_unicode_compatible
 class ReservableProduct(Product):
     """
     Subclassed product for reservable types.
@@ -282,6 +270,7 @@ class ReservableProduct(Product):
         return True
 
 
+@python_2_unicode_compatible
 class ReservableProductAvailability(models.Model):
     """
     Reservable product availability.
@@ -297,6 +286,7 @@ class ReservableProductAvailability(models.Model):
         return str(self.from_date) + "-" + str(self.to_date)
 
 
+@python_2_unicode_compatible
 class ReservableProductReservation(models.Model):
     """
     Reservation
@@ -318,6 +308,7 @@ class ReservableProductReservation(models.Model):
         ordering = ['-date']
 
 
+@python_2_unicode_compatible
 class ReservableProductCartReservation(models.Model):
     """
     Reservation in cart
@@ -331,6 +322,7 @@ class ReservableProductCartReservation(models.Model):
         ordering = ['-last_updated']
 
 
+@python_2_unicode_compatible
 class ReservableProductOrderReservation(models.Model):
     """
     Reservation in order
@@ -347,6 +339,7 @@ class ReservableProductOrderReservation(models.Model):
         reservation.delete()
 
 
+@python_2_unicode_compatible
 class ProductImage(Orderable):
     """
     An image for a product - a relationship is also defined with the
@@ -356,7 +349,7 @@ class ProductImage(Orderable):
     for the product.
     """
 
-    file = models.ImageField(_("Image"),
+    file = FileField(_("Image"), max_length=255, format="Image",
         upload_to=upload_to("shop.ProductImage.file", "product"))
     description = CharField(_("Description"), blank=True, max_length=100)
     product = models.ForeignKey("Product", related_name="images")
@@ -366,7 +359,7 @@ class ProductImage(Orderable):
         verbose_name_plural = _("Images")
         order_with_respect_to = "product"
 
-    def __unicode__(self):
+    def __str__(self):
         value = self.description
         if not value:
             value = self.file.name
@@ -375,6 +368,7 @@ class ProductImage(Orderable):
         return value
 
 
+@python_2_unicode_compatible
 class ProductOption(models.Model):
     """
     A selectable option for a product such as size or colour.
@@ -385,7 +379,7 @@ class ProductOption(models.Model):
 
     objects = managers.ProductOptionManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s" % (self.get_type_display(), self.name)
 
     class Meta:
@@ -408,6 +402,7 @@ class ProductVariationMetaclass(ModelBase):
         return super(ProductVariationMetaclass, cls).__new__(*args)
 
 
+@python_2_unicode_compatible
 class ProductVariation(with_metaclass(ProductVariationMetaclass, Priced)):
     """
     A combination of selected options from
@@ -417,14 +412,14 @@ class ProductVariation(with_metaclass(ProductVariationMetaclass, Priced)):
     product = models.ForeignKey("Product", related_name="variations")
     default = models.BooleanField(_("Default"), default=False)
     image = models.ForeignKey("ProductImage", verbose_name=_("Image"),
-                              null=True, blank=True)
+                              null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = managers.ProductVariationManager()
 
     class Meta:
         ordering = ("-default",)
 
-    def __unicode__(self):
+    def __str__(self):
         """
         Display the option names and values for the variation.
         """
@@ -458,7 +453,8 @@ class ProductVariation(with_metaclass(ProductVariationMetaclass, Priced)):
         ``ProductVariationMetaclass``.
         """
         all_fields = cls._meta.fields
-        return [f for f in all_fields if isinstance(f, fields.OptionField)]
+        return [f for f in all_fields if isinstance(f, fields.OptionField) and
+                not hasattr(f, "translated_field")]
 
     def options(self):
         """
@@ -587,6 +583,7 @@ class Category(Page, RichText):
         return products
 
 
+@python_2_unicode_compatible
 class Order(SiteRelated):
 
     billing_detail_first_name = CharField(_("First name"), max_length=100)
@@ -600,12 +597,12 @@ class Order(SiteRelated):
     billing_detail_email = models.EmailField(_("Email"))
     shipping_detail_first_name = CharField(_("First name"), max_length=100)
     shipping_detail_last_name = CharField(_("Last name"), max_length=100)
-    shipping_detail_street = CharField(_("Street"), max_length=100, blank=True)
-    shipping_detail_city = CharField(_("City/Suburb"), max_length=100, blank=True)
-    shipping_detail_state = CharField(_("State/Region"), max_length=100, blank=True)
-    shipping_detail_postcode = CharField(_("Zip/Postcode"), max_length=10, blank=True)
-    shipping_detail_country = CharField(_("Country"), max_length=100, blank=True)
-    shipping_detail_phone = CharField(_("Phone"), max_length=20, blank=True)
+    shipping_detail_street = CharField(_("Street"), max_length=100)
+    shipping_detail_city = CharField(_("City/Suburb"), max_length=100)
+    shipping_detail_state = CharField(_("State/Region"), max_length=100)
+    shipping_detail_postcode = CharField(_("Zip/Postcode"), max_length=10)
+    shipping_detail_country = CharField(_("Country"), max_length=100)
+    shipping_detail_phone = CharField(_("Phone"), max_length=20)
     additional_instructions = models.TextField(_("Additional instructions"),
                                                blank=True)
     time = models.DateTimeField(_("Time"), auto_now_add=True, null=True)
@@ -641,7 +638,7 @@ class Order(SiteRelated):
         verbose_name_plural = __("commercial meaning", "Orders")
         ordering = ("-id",)
 
-    def __unicode__(self):
+    def __str__(self):
         return "#%s %s %s" % (self.id, self.billing_name(), self.time)
 
     def billing_name(self):
@@ -723,6 +720,7 @@ class Order(SiteRelated):
             DiscountCode.objects.active().filter(code=discount_code).update(
                 uses_remaining=models.F('uses_remaining') - 1)
         request.cart.delete()
+        del request.session['cart']
 
     def details_as_dict(self):
         """
@@ -779,6 +777,8 @@ class Cart(models.Model):
         Increase quantity of existing item if SKU matches, otherwise create
         new.
         """
+        if not self.pk:
+            self.save()
         kwargs = {"sku": variation.sku, "unit_price": variation.price()}
         if variation.product.content_model == 'reservableproduct':
             # create always
@@ -916,6 +916,7 @@ class Cart(models.Model):
         return False
 
 
+@python_2_unicode_compatible
 class SelectedProduct(models.Model):
     """
     Abstract model representing a "selected" product in a cart or order.
@@ -934,7 +935,7 @@ class SelectedProduct(models.Model):
     class Meta:
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return ""
 
     def is_reserved(self):
@@ -1013,6 +1014,7 @@ class ProductAction(models.Model):
         unique_together = ("product", "timestamp")
 
 
+@python_2_unicode_compatible
 class Discount(models.Model):
     """
     Abstract model representing one of several types of monetary
@@ -1039,7 +1041,7 @@ class Discount(models.Model):
     class Meta:
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def all_products(self):
@@ -1104,19 +1106,14 @@ class Sale(Discount):
                     # Work around for MySQL which does not allow update
                     # to operate on subquery where the FROM clause would
                     # have it operate on the same table, so we update
-                    # each instance individually:
-
-    # http://dev.mysql.com/doc/refman/5.0/en/subquery-errors.html
-
+                    # each instance individually: http://bit.ly/1xMOGpU
+                    #
                     # Also MySQL may raise a 'Data truncated' warning here
                     # when doing a calculation that exceeds the precision
                     # of the price column. In this case it's safe to ignore
                     # it and the calculation will still be applied, but
                     # we need to massage transaction management in order
-                    # to continue successfully:
-
-    # https://groups.google.com/forum/#!topic/django-developers/ACLQRF-71s8
-
+                    # to continue successfully: http://bit.ly/1xMOJCd
                     for priced in priced_objects.filter(**extra_filter):
                         for field, value in list(update.items()):
                             setattr(priced, field, value)
